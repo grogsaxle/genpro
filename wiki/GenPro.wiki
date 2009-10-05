@@ -1,0 +1,15 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+Code will be available soon!
+At least before November 11, 2009. On that date a presentation about GenPro will be given at the NLJUG (Dutch java-usergroup) J-Fall conference. 
+
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
