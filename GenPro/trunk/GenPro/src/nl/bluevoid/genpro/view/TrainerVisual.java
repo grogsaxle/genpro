@@ -24,7 +24,6 @@ import javax.swing.border.EmptyBorder;
 import nl.bluevoid.genpro.Grid;
 import nl.bluevoid.genpro.ResultListener;
 import nl.bluevoid.genpro.Trainer;
-import nl.bluevoid.genpro.util.JavaFormatter;
 
 public abstract class TrainerVisual extends Trainer implements ResultListener {
 
