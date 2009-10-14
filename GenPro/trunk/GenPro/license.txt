@@ -1,0 +1,15 @@
+
+GenPro License information
+
+GenPro offers a dual license model containing the GPL (GNU General Public License) version 2  
+ as well as a commercial license.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License  version 2 (GPL v2) as published by the Free
+Software Foundation. 
+This means that any software which contains GenPro code must also be published under the GPL license.
+
+For companies and persons having a problem with the GPL license, a commercial license is available: 
+contact Rob van der Veer (rob@bluevoid.nl) for more information.
+ 
+Oktober 2009. 
