@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="GenPro SwingView" default=""	basedir=".">
+	<target name="Jar">
+		<jar destfile="genpro-swingview-0.8.jar" >
+			<fileset dir="./bin/" id="resources">
+				<include name="**/**.class" />
+				<exclude name="**/test/**.*"/>
+			</fileset>
+		</jar>
+	</target>
+</project>
