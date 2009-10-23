@@ -108,7 +108,7 @@ public abstract class SwitchCell extends ValueCell implements Calculable {
   public SwitchOption getOptionToCall(Object value) {
     sortOptions();
     try {
-      int index = Arrays.binarySearch(optionValues, 0, options.size(), ((Number) value).doubleValue());
+      int index = Arrays.binarySearch(optionValues, ((Number) value).doubleValue());
       /**
        * Arrays.binarySearch returns: index of the search key, if it is contained in the array within the
        * specified range; otherwise, (-(insertion point) - 1). The insertion point is defined as the point at
