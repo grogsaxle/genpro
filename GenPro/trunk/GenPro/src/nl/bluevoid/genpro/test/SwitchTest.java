@@ -18,7 +18,6 @@ import nl.bluevoid.genpro.Trainer;
 import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
-import nl.bluevoid.genpro.operations.NumberCastOperations;
 import nl.bluevoid.genpro.operations.NumberOperations;
 
 public class SwitchTest extends Trainer {
@@ -35,7 +34,7 @@ public class SwitchTest extends Trainer {
     s.addInputCell("length", Double.class);
     s.addOutputCell("Category", Double.class);
     s.setCallCells(0, "c", Double.class);
-    s.setLibraryCells(new LibraryCell(NumberCastOperations.class), NumberOperations.NUM_OPS);
+    s.setLibraryCells(NumberOperations.NUM_OPS);
     ConstantCell cCell1 = new ConstantCell("const1", Double.class, -100, 100);
     ConstantCell cCell2 = new ConstantCell("const2", Double.class, -100, 100);
     ConstantCell cCell3 = new ConstantCell("const3", Double.class, -100, 100);
