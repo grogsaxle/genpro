@@ -1,0 +1,2 @@
+java -classpath ".;genpro-0.8.jar;genpro-swingview-0.8.jar;genpro-examples-0.8.jar;lib/collections-generic-4.01.jar;lib/jung-algorithms-2.0.jar;lib/jung-visualization-2.0.jar;lib/jung-api-2.0.jar;lib/jung-graph-impl-2.0.jar" nl.bluevoid.genpro.example.eggweight.EggWeightProblem
+pause

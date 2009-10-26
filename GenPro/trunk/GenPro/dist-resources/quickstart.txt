@@ -1,0 +1,34 @@
+GenPro
+
+Running the examples:
+    Start one of the batchfiles:
+    - runCelciusFahrenheitExample.bat
+    - runEggWeightExample.bat
+
+What is in the distribution:
+
+- examples-src : The sources of the examples, this is a good starting point to explore how to use GenPro.
+
+- genpro-x.x.jar : This is the GenPro core library (junit test are not included)
+        minimum java-version :  java 1.5 (excluding swing)
+        libraries needed     :  none
+		
+- genpro-swingview-xx.jar : This contains the view classes, VisualTrainer etc.. (junit test are not included) 		 
+        minimum java-version :  java 1.5 (including swing)
+        libraries needed     :  genpro-x.x.jar
+                                collections-generic-4.01.jar 
+                                jung-algorithms-2.0.jar
+                                jung-visualization-2.0.jar
+                                jung-api-2.0.jar
+                                jung-graph-impl-2.0.jar
+								
+- genpro-examples-x.x.jar : This contains the examples		
+        minimum java-version :  java 1.5 
+        libraries needed     :  genpro-x.x.jar
+                                genpro-swingview-x.x.jar ( + its needed libraries)
+
+- doc/genpro : The Javadoc of both genpro and genpro-swingview
+
+- license.txt : The license
+
+- eggData.txt : Data file for eggweight example							

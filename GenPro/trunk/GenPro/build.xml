@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="GenPro core" default=""	basedir=".">
-	<target name="Jar core">
-		<jar destfile="GenProCore.jar" >
-			<fileset dir="./build/classes" id="resources">
-				<include name="**/**.java" />
+	<target name="Jar">
+		<jar destfile="genpro-0.8.jar" >
+			<fileset dir="./bin" id="resources">
+				<include name="**/**.class" />
 				<exclude name="**/test/**.*"/>
 			</fileset>
 		</jar>
