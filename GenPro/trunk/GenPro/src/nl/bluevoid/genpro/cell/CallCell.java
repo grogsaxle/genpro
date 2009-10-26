@@ -171,7 +171,7 @@ public class CallCell extends ValueCell implements Calculable {
         + " on " + targetCellStr;
   }
 
-  @Override
+  //@Override
   public void restoreConnections(final CellMap map) throws NoCellFoundException {
     // replace params
     for (int i = 0; i < params.length; i++) {
@@ -197,7 +197,7 @@ public class CallCell extends ValueCell implements Calculable {
     }
   }
 
-  @Override
+  //@Override
   public void setCascadeUsedForOutput() {
     if (!isUsedForOutput()) {
       // Debug.println("setUsedForOutput called on "+this);
@@ -309,7 +309,7 @@ public class CallCell extends ValueCell implements Calculable {
     return errored;
   }
 
-  @Override
+  //@Override
   public void resetCallAndErrorCounter() {
     errored = 0;
     calced = 0;

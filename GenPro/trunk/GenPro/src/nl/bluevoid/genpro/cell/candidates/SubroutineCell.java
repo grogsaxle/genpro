@@ -75,31 +75,31 @@ public class SubroutineCell extends Cell implements Calculable {
     throw new IllegalStateException("resetIsUsedForOutput is not implemented yet");
   }
 
-  @Override
+  //@Override  //from interface, does only work in 1.6 and up
   public void validateLeadsToInputCell() {
     // TODO Auto-generated method stub
     throw new IllegalStateException("validateLeadsToInputCell is not implemented yet");
   }
 
-  @Override
+  //@Override  //from interface, does only work in 1.6 and up
   public void setCascadeUsedForOutput() {
     // TODO Auto-generated method stub
     throw new IllegalStateException("setCascadeUsedForOutput is not implemented yet");
   }
 
-  @Override
+  //@Override  //from interface, does only work in 1.6 and up
   public int getCalced() {
     // TODO Auto-generated method stub
     throw new IllegalStateException("getCalced is not implemented yet");
   }
 
-  @Override
+  //@Override  //from interface, does only work in 1.6 and up
   public int getErrored() {
     // TODO Auto-generated method stub
     throw new IllegalStateException("getErrored is not implemented yet");
   }
 
-  @Override
+  //@Override  //from interface, does only work in 1.6 and up
   public void resetCallAndErrorCounter() {
     // TODO Auto-generated method stub
     throw new IllegalStateException("resetCallAndErrorCounter is not implemented yet");

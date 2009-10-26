@@ -57,7 +57,7 @@ public abstract class Trainer implements ResultListener {
     return setup;
   }
 
-  @Override
+  //@Override  //from interface, does only work in 1.6 and up
   public void newBestResult(Grid bestSolution) {
     printAndStoreToFile(bestSolution, false);
     printBestSolution(bestSolution);

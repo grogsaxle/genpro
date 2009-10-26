@@ -229,7 +229,7 @@ public abstract class SwitchCell extends ValueCell implements Calculable {
     this.switchValueCell = switchValueCell;
   }
 
-  @Override
+  //@Override
   public void setCascadeUsedForOutput() {
     if (!isUsedForOutput()) {
       super.setUsedForOutput(true);
@@ -240,17 +240,17 @@ public abstract class SwitchCell extends ValueCell implements Calculable {
     }
   }
 
-  @Override
+  //@Override
   public int getCalced() {
     return calced;
   }
 
-  @Override
+  //@Override
   public int getErrored() {
     return errored;
   }
 
-  @Override
+  //@Override
   public void resetCallAndErrorCounter() {
     calced = 0;
     errored = 0;

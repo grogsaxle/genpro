@@ -16,7 +16,6 @@ import nl.bluevoid.genpro.Setup;
 import nl.bluevoid.genpro.TestSet;
 import nl.bluevoid.genpro.Trainer;
 import nl.bluevoid.genpro.cell.ConstantCell;
-import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.NumberOperations;
 
