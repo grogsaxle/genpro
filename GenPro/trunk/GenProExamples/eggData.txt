@@ -1,0 +1,133 @@
+
+#Yes. Classification of eggs range as follows.
+
+#Pee Wee
+#Small
+#Medium
+#Large
+#Extra large
+#Jumbo
+#Super Jumbo
+#Double yolk
+
+
+# Egg Size / ounces (oz) per dozen
+
+#Jumbo		30
+#Extra Large	27
+#Large		24
+#Medium		21
+#Small		18
+#Pee Wee		15
+
+# zie http://en.wikipedia.org/wiki/Egg_(food)#Chicken_egg_sizes voor europesche/americaanse/australische klassen 
+
+
+#Modern Sizes (USA) 
+#Size 		Mass per egg 				Cooking Yield (Volume)[1]
+#Jumbo 		Greater than 71 g 	
+#Very Large or Extra-Large (XL) 	Greater than 64 g 	56 mL (4 tbsp)
+#Large (L) 	Greater than 57 g 			        46 mL (3.25 tbsp)
+#Medium (M) 	Greater than 50 g 			         43 mL (3 tbsp)
+#Small (S) 	Greater than 43 g 	
+#Peewee 	Greater than 35 g 	
+
+
+#Modern Sizes (Europe) 
+#Size 		Mass per egg
+#Very Large 	73 g and over
+#Large 		63-73 g
+#Medium 	53-63 g
+#Small 		53 g and under
+
+#Modern Sizes (Australia) 
+#Size 		Mass per egg
+#Jumbo 		68 g
+#Extra-Large 	60 g
+#Large 		52 g
+
+#In Western Australia, two additional sizes are also standardized by the Golden Eggs Corporation[36]
+#Additional Sizes (Western Australia) 
+#Mega or XXXL 	72 g
+#Medium 	43 g
+
+#In New Zealand sizes are based on the minimum mass per egg: [37]
+#Modern Sizes (New Zealand) 
+#Size 	Minimum mass per egg
+#8 (Jumbo) 	68 g
+#7 (Large) 	62 g
+#6 (Standard) 	53 g
+#5 (Medium) 	44 g
+#4 (Pullet) 	35 g
+
+#Traditional Sizes Size 	Mass
+#Size 0 	Greater than 75g
+#Size 1 	70 g - 75 g
+#Size 2 	65 g - 70 g
+#Size 3 	60 g - 65 g
+#Size 4 	55 g - 60 g
+#Size 5 	50 g - 55 g
+#Size 6 	45 g - 50 g
+#Size 7 	less than 45 g
+
+
+# lenght, width, weight
+
+# klasse S
+49.9,40.2,44.5
+51.5,39.8,46
+50.3,40.8,47.5
+52.1,40.7,48
+53.4,41.5,50
+54.6,40.5,51
+51.2,42,52
+53.5,41.8,52
+54.3,41.4,52
+52.3,42.3,52.5
+
+# klasse M 
+53.1, 42.6, 54
+58.2, 41.8, 56
+53.2, 44.1, 57.5
+55.8, 43.5, 58
+56.2, 42.8, 58
+55.4, 44.3 ,60
+57.2, 43.1 ,60
+53.8, 44.5, 60
+60.1, 42.3, 60
+56.4, 43.8, 61
+56.9, 43.7, 61.5
+56.4, 44.5, 62
+
+# L
+58.2, 43.4, 62
+59.8, 44.1, 63
+58.8, 44.7, 64
+58.7, 45.1, 64
+59.1, 43.7, 64
+58.1, 45.1, 66
+57.9, 45.4, 66
+60.4, 44.5, 68.5
+60.2, 44.9, 70
+58.3, 46.1, 71
+
+
+# klasse XL
+61, 45.3,69
+
+59.2, 46.1, 70
+59.45, 46.1, 70
+58.9, 47, 70
+60.35, 46.45, 71.5
+64.2, 45.3, 74
+61.6, 47.2, 76
+61.6, 47.5, 77
+62.3, 47.4, 77
+64,   46.5, 77
+
+# kwarteleieren uit spanje
+
+32.6,25.5, 12
+33,25.2,11
+33,25.8,12.3
+
