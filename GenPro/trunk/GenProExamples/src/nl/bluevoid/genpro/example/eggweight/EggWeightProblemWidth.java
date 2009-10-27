@@ -9,7 +9,6 @@ import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.NumberOperations;
-import nl.bluevoid.genpro.view.TrainerVisual;
 
 public class EggWeightProblemWidth extends Trainer{//Visual {
 

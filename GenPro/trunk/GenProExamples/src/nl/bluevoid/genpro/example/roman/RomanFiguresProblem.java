@@ -6,7 +6,6 @@ import nl.bluevoid.genpro.Grid;
 import nl.bluevoid.genpro.ScoringType;
 import nl.bluevoid.genpro.Setup;
 import nl.bluevoid.genpro.TestSet;
-import nl.bluevoid.genpro.Trainer;
 import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.BooleanOperations;
@@ -14,7 +13,7 @@ import nl.bluevoid.genpro.operations.NumberOperations;
 import nl.bluevoid.genpro.view.TrainerVisual;
 
 public class RomanFiguresProblem extends TrainerVisual {
-
+  
   public static void main(String[] args) {
     RomanFiguresProblem rfp = new RomanFiguresProblem();
     rfp.startTraining();
