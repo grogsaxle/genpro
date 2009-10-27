@@ -1,12 +1,17 @@
 /*
- * This file is part of GenPro, Reflective Object Oriented Genetic Programming.
+ * Copyright 2002-2007 the original author or authors.
  *
- * GenPro offers a dual license model containing the GPL (GNU General Public License) version 2  
- * as well as a commercial license.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * For licensing information please see the file license.txt included with GenPro
- * or have a look at the top of class nl.bluevoid.genpro.cell.Cell which representatively
- * includes the GenPro license policy applicable for any file delivered with GenPro.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package nl.bluevoid.genpro.view;
@@ -39,7 +44,10 @@ import edu.uci.ics.jung.graph.util.EdgeType;
 import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
-
+/**
+ * @author Rob van der Veer
+ * @since 1.0
+ */
 public class JungGraph {
   private final Grid grid;
   private Graph<CellInterface, Link> g2;
