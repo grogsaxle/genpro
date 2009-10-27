@@ -31,4 +31,10 @@ What is in the distribution:
 
 - license.txt : The license
 
-- eggData.txt : Data file for eggweight example							
+- eggData.txt : Data file for eggweight example	
+
+
+known issues:
+
+- multi-threading does not work yet
+- example RomanFiguresProblem does not result in a working solution yet

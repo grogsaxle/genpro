@@ -14,33 +14,32 @@
  * limitations under the License.
  */
 
-package nl.bluevoid.genpro.cell.test;
+package nl.bluevoid.genpro.util.test;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-
-import nl.bluevoid.genpro.NoCallTarget;
-import nl.bluevoid.genpro.cell.LibraryCell;
-import nl.bluevoid.genpro.operations.NumberOperations;
+import junit.framework.Assert;
 import junit.framework.TestCase;
+import nl.bluevoid.genpro.Setup;
+import nl.bluevoid.genpro.util.GewogenKansSelector;
 /**
  * @author Rob van der Veer
  * @since 1.0
  */
-
-public class LibAndAnnotationTest extends TestCase{
+public class GewogenKansSelectorTest extends TestCase {
   
-  public void testAnnotation() {
-    LibraryCell num=NumberOperations.NUM_OPS;
-    ArrayList<Method> meths=num.getAllMethods();
-    for (Method method : meths) {
-      System.out.println(""+method);
-      assertFalse(method.isAnnotationPresent(NoCallTarget.class));
-      for(Annotation a:method.getAnnotations()){
-        System.out.println("  "+a);
+  public void testThis() {
+    GewogenKansSelector<String> gks = new GewogenKansSelector<String>(new Setup("GewogenKansSelector test"));
+    gks.add("10", 10, 1);
+    gks.add("50", 50, 5);
+    gks.add("40", 20, 4);
+
+    int found50 = 0;
+    for (int i = 0; i < 100000; i++) {
+      if (gks.getRandomItem().equals("50")) {
+        found50++;
       }
     }
+    System.out.println("found50 "+found50);
+    Assert.assertTrue(found50 > 49000);
+    Assert.assertTrue(found50 < 51000);
   }
-
 }

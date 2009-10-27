@@ -1,12 +1,17 @@
 /*
- * This file is part of GenPro, Reflective Object Oriented Genetic Programming.
+ * Copyright 2002-2007 the original author or authors.
  *
- * GenPro offers a dual license model containing the GPL (GNU General Public License) version 2  
- * as well as a commercial license.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * For licensing information please see the file license.txt included with GenPro
- * or have a look at the top of class nl.bluevoid.genpro.cell.Cell which representatively
- * includes the GenPro license policy applicable for any file delivered with GenPro.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package nl.bluevoid.genpro.cell.switx;
@@ -17,15 +22,12 @@ import java.util.HashMap;
 import nl.bluevoid.genpro.CallTarget;
 import nl.bluevoid.genpro.Util;
 import nl.bluevoid.genpro.cell.CellTypeEnum;
-import nl.bluevoid.genpro.cell.NoCellFoundException;
 import nl.bluevoid.genpro.cell.ValueCell;
 import nl.bluevoid.genpro.util.Debug;
 
 /**
- * minimum number of options is 2 option 1 always has value: Double.NEGATIVE_INFINITY;
- * 
- * @param name
- * @param valueType
+ * @author Rob van der Veer
+ * @since 1.0
  */
 
 public class NumberSwitchCell extends SwitchCell {
@@ -33,6 +35,11 @@ public class NumberSwitchCell extends SwitchCell {
   private final double minOptionValue;
   private final double maxOptionValue;
   private final double range;
+  
+  /**
+   * Minimum number of options is 2, option 1 always has value: Double.NEGATIVE_INFINITY;
+   * 
+   */
 
   public NumberSwitchCell(String name, Class<?> valueType, int maxOptionsNr, double minOptionValue,
       double maxOptionValue) {
