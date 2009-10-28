@@ -3,7 +3,7 @@
 
 ===Running the examples===
 # Make sure you have downloaded and installed java SDK 1.5.
-# Download and unzip the main distribution (genpro-x.x.zip)
+# Download and unzip the main distribution (genpro-x.x-bin.zip)
 # Start one of the batchfiles (or rewrite them to linux ; ):
   * runCelciusFahrenheitExample.bat
   * runEggWeightExample.bat
