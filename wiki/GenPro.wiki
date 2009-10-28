@@ -1,4 +1,5 @@
-= GenPro Quick start =
+#labels Featured,Phase-Deploy
+=Quick start =
 
 ===Running the examples===
     Start one of the batchfiles:
