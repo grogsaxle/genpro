@@ -7,13 +7,13 @@ Start one of the batchfiles (or rewrite them to linux ; ):
   * runEggWeightExample.bat
 
 ===What is in the distribution===
-- examples-src : The sources of the examples, this is a good starting point to explore how to use GenPro.
+- folder examples-src : The sources of the examples, this is a good starting point to explore how to use GenPro.
 
 - genpro-x.x.jar : This is the GenPro core library (junit test are not included). The core is chosen in such a way that it can run on Android as well. A separate Android distribution will be made available.
   * minimum java-version :  java 1.5 (excluding swing)
   * needed jars    :  none
 		
-- genpro-swingview-xx.jar : This contains the view classes, VisualTrainer etc.. (junit test are not included) 		 
+- genpro-swingview-xx.jar : This contains the view classes, VisualTrainer etc..(junit test are not included) 		 
   * minimum java-version :  java 1.5 (including swing)
   * needed jars     :  genpro-x.x.jar, collections-generic-4.01.jar, jung-algorithms-2.0.jar, jung-visualization-2.0.jar, jung-api-2.0.jar, jung-graph-impl-2.0.jar
 								
@@ -21,14 +21,11 @@ Start one of the batchfiles (or rewrite them to linux ; ):
   * minimum java-version :  java 1.5 
   * needed jars     :  genpro-x.x.jar, genpro-swingview-x.x.jar ( + its needed libraries)
 
-- doc/genpro : The Javadoc of both genpro and genpro-swingview
-
-- license.txt : The license
+- folder doc/genpro : The Javadoc of both genpro-core and genpro-swingview
 
 - eggData.txt : Data file for eggweight example	
 
 
 ===known issues===
-
-- multi-threading does not work yet
-- example RomanFiguresProblem does not result in a working solution yet
+  * multi-threading does not work yet
+  * example RomanFiguresProblem does not result in a working solution yet
