@@ -2,7 +2,9 @@
 =Quick start =
 
 ===Running the examples===
-Start one of the batchfiles (or rewrite them to linux ; ):
+# Make sure you have downloaded and installed java SDK 1.5.
+# Download and unzip the main distribution (genpro-x.x.zip)
+# Start one of the batchfiles (or rewrite them to linux ; ):
   * runCelciusFahrenheitExample.bat
   * runEggWeightExample.bat
 
