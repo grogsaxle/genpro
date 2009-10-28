@@ -2,12 +2,11 @@
 =Quick start =
 
 ===Running the examples===
-    Start one of the batchfiles:
-    - runCelciusFahrenheitExample.bat
-    - runEggWeightExample.bat
+Start one of the batchfiles (or rewrite them to linux ; ):
+  * runCelciusFahrenheitExample.bat
+  * runEggWeightExample.bat
 
 ===What is in the distribution===
-
 - examples-src : The sources of the examples, this is a good starting point to explore how to use GenPro.
 
 - genpro-x.x.jar : This is the GenPro core library (junit test are not included). The core is chosen in such a way that it can run on Android as well. A separate Android distribution will be made available.
