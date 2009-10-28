@@ -1,5 +1,3 @@
-#summary quickstart.txt
-
 = GenPro Quick start =
 
 ===Running the examples===
