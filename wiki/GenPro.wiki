@@ -1,5 +1,6 @@
 #labels Featured,Phase-Deploy
 =Quick start =
+#summary quick start
 
 ===Running the examples===
 # Make sure you have downloaded and installed java SDK 1.5.
