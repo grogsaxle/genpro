@@ -3,14 +3,14 @@
 #summary quick start
 
 ===Running the examples===
-# Make sure you have downloaded and installed java SDK 1.5.
-# Download and unzip the main distribution (genpro-x.x-bin.zip)
-# Start one of the batchfiles (or rewrite them to linux ; ):
-  * runCelciusFahrenheitExample.bat
-  * runEggWeightExample.bat
+  # Make sure you have downloaded and installed java SDK 1.5 or higher.
+  # Download and unzip the main distribution (genpro-x.x-bin.zip)
+  # Start one of the batchfiles (or rewrite them to linux ; ):
+    * runCelciusFahrenheitExample.bat
+    * runEggWeightExample.bat
 
 
-===What is in the distribution===
+===What is in the distribution:===
 - folder *examples-src* : The sources of the examples, this is a good starting point to explore how to use GenPro.
 
 - *genpro-x.x.jar* : This is the GenPro core library (junit test are not included). The core is chosen in such a way that it can run on Android as well. A separate Android distribution will be made available.
