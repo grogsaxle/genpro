@@ -17,12 +17,15 @@
 package nl.bluevoid.genpro.test;
 
 import nl.bluevoid.genpro.Grid;
+import nl.bluevoid.genpro.GridSolutionEvaluator;
 import nl.bluevoid.genpro.Setup;
 import nl.bluevoid.genpro.TestSet;
+import nl.bluevoid.genpro.TestSetSolutionEvaluator;
 import nl.bluevoid.genpro.Trainer;
 import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.NumberOperations;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -34,7 +37,7 @@ public class SwitchTest extends Trainer {
     st.startTraining();
   }
 
- 
+  @SuppressWarnings("unchecked")
   @Override
   public Setup createSetup() {
     Setup s = new Setup(this.getClass().getSimpleName());
@@ -52,30 +55,39 @@ public class SwitchTest extends Trainer {
   }
 
   @Override
-  public TestSet createTestSet() {
-    TestSet ts = new TestSet(getSetup(), "length", "Category") {
+  public TestSetSolutionEvaluator createEvaluator() {
+    return new GridSolutionEvaluator() {
+
+      @Override
+      public double scoreOutput(ReferenceCell outputCell, Object calculated, Object expected) {
+        return getAbsoluteNumberDifference((Number) calculated, (Number) expected);
+      }
+
+      @Override
+      public TestSet createTestSet() {
+        TestSet ts = new TestSet(getSetup(), "length", "Category");
+        ts.addCellValues(300d, 3);
+        ts.addCellValues(323d, 3);
+        ts.addCellValues(223d, 2);
+        ts.addCellValues(123d, 1);
+        ts.addCellValues(323d, 3);
+        ts.addCellValues(623d, 6);
+        ts.addCellValues(323d, 3);
+        ts.addCellValues(316d, 3);
+        return ts;
+      }
+
       @Override
       public double scoreGrid(Grid g) {
         return 0;
       }
 
       @Override
-      public double scoreOutput(ReferenceCell outputCell, Object calculated, Object expected) {
-        return getAbsoluteNumberDifference((Number)calculated, (Number)expected);
+      public double scoreGridException(Throwable t) {
+        return 0;
       }
     };
-    ts.addCellValues(300d, 3);
-    ts.addCellValues(323d, 3);
-    ts.addCellValues(223d, 2);
-    ts.addCellValues(123d, 1);
-    ts.addCellValues(323d, 3);
-    ts.addCellValues(623d, 6);
-    ts.addCellValues(323d, 3);
-    ts.addCellValues(316d, 3);
-
-    return ts;
   }
-
 }
 
 enum Category {

@@ -18,6 +18,7 @@ package nl.bluevoid.genpro.cell;
 
 import nl.bluevoid.genpro.Util;
 import nl.bluevoid.genpro.util.Debug;
+import nl.bluevoid.genpro.util.StringUtil;
 import nl.bluevoid.genpro.util.XMLBuilder;
 /**
  * @author Rob van der Veer
@@ -68,12 +69,23 @@ public class ConstantCell extends ValueCell {
     this.max = 0;
   }
   
+  public ConstantCell(String name, Class<String> constantClass, int maxLength) {
+    super(name, constantClass, false, CellTypeEnum.ConstantCell);
+    canMutate=true;
+    this.range=0;
+    this.min = 1;
+    this.max = maxLength;
+    setValue(StringUtil.getRandomString((int)max));
+  }
+  
   public void setRandomValue() {
     if (valueType.equals(Double.class)) {
       setValue(random.nextDouble() * range + min);
     } else if (valueType.equals(Integer.class)) {
       setValue((int)(random.nextInt((int) range) + min));
-    } else {
+    }else if (valueType.equals(String.class)) {
+      setValue(StringUtil.getRandomString((int)max));
+    }  else {
       throw new IllegalArgumentException("class not supported:" + valueType.getName());
     }
   }
@@ -85,7 +97,10 @@ public class ConstantCell extends ValueCell {
       } else if (super.valueType.equals(Integer.class)) {
         final int val = Util.mutateperc((Integer) getValue(), 100, min, max).intValue();
         setValue(val);
-      } else {
+      } else if (super.valueType.equals(String.class)) {
+        final String val = StringUtil.mutateString((String) getValue(), (int) max);
+        setValue(val);
+      } else{
         throw new IllegalArgumentException("class not supported:" + valueType.getName());
       }
     } else {

@@ -1,0 +1,25 @@
+
+
+Changes in version 0.84 (december 2009): 
+ GenPro Core
+ - added TestSetSolutionEvaluator & GridSolutionEvaluator
+ - changed way of setting up a Trainer with Trainer/VisualTrainer create an evaluator instead of a TestSet 
+ - changed all examples to new way of setup
+ - added simple 'if' (ternairy operator) with IfOperations.java
+ - added DataTransformer to convert testdata on import
+ - added ${} option for javaSyntax in operations (see NumberOperations.pow())
+ - speed improvements
+ 
+ GenPro SwingView:
+ - use queue's for updates: drawing is now done on separate thread -> beter performance  
+ - added VM client-server mode check/warning for faster running
+ - UI improvements: 
+   - added tab for showing errors
+   - show generation count in statusbar
+   - checkbox for showing/hiding junkdna in both graph and javacode
+   - added progress dialog for long startup in case of many testcases.
+
+
+
+Changes in version 0.83 (oktober 2009): 
+- Everything :) First release of genpro.

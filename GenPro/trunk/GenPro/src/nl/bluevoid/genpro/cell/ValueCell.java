@@ -160,7 +160,7 @@ public abstract class ValueCell extends Cell implements Cloneable {
   }
 
   public void setValue(final Object value) {
-    if (value == null || value.getClass().equals(valueType)) {
+    if (value == null || valueType.isAssignableFrom(value.getClass())) {
       this.value = value;
     } else {
       throw new IllegalArgumentException("Expected object of type:" + valueType.getSimpleName() + " but got:"

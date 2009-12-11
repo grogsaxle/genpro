@@ -24,6 +24,7 @@ import nl.bluevoid.genpro.util.CollectionsUtil;
 import nl.bluevoid.genpro.util.Debug;
 import nl.bluevoid.genpro.util.SD;
 import nl.bluevoid.genpro.util.StringUtil;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -34,14 +35,18 @@ public class TestSetStatistics {
   public final static String EXPECTED = "_expected";
   public static final String DIFF = "_diff";
   public static final String DIFF_PERCENTAGE = "_diff%";
+  private static final String TEST_CASE_SCORE = "score";
 
   private final TestSet testSet;
   private final HashMap<String, Object[]> results = new HashMap<String, Object[]>();
   private final Grid grid;
+  private final TestSetSolutionEvaluator evaluator;
 
-  public TestSetStatistics(final TestSet testSet, Grid grid) {
+  public TestSetStatistics(final TestSet testSet, TestSetSolutionEvaluator evaluator, Grid grid) {
+    this.evaluator = evaluator;
     this.grid = grid;
     Debug.checkNotNull(testSet, "testSet");
+    Debug.checkNotNull(evaluator, "evaluator");
     this.testSet = testSet;
     // create arrays for output result: actual & expected
     for (final String name : testSet.getOutputCellNames()) {
@@ -50,6 +55,7 @@ public class TestSetStatistics {
       results.put(name + ACTUAL, new Object[vals.length]);
       results.put(name + DIFF, new Object[vals.length]);
       results.put(name + DIFF_PERCENTAGE, new Object[vals.length]);
+      results.put(TEST_CASE_SCORE, new Double[vals.length]);
     }
 
     // create Arrays for inputs
@@ -104,6 +110,10 @@ public class TestSetStatistics {
     }
   }
 
+  public void setTestCaseScore(double testCaseScore, int valueNr) {
+    results.get(TEST_CASE_SCORE)[valueNr] = testCaseScore;
+  }
+
   public String getResults() {
     StringBuffer b = new StringBuffer();
 
@@ -116,17 +126,18 @@ public class TestSetStatistics {
       names.add(name + DIFF);
       names.add(name + DIFF_PERCENTAGE);
     }
+    names.add(TEST_CASE_SCORE);
     // print names
     for (String name : names) {
       b.append(StringUtil.assureLength(name, 15));
     }
     b.append("\n");
     // print values for each name
-    for (int i = 0; i < testSet.getNumValues(); i++) {
+    for (int i = 0; i < testSet.getNumberOfTestCases(); i++) {
       for (String name : names) {
         Object o = results.get(name)[i];
         try {
-          b.append(StringUtil.assureLength(""+o, 15));
+          b.append(StringUtil.assureLength("" + o, 15));
         } catch (NullPointerException e) {
           System.out.println("error at " + name + " " + i);
           throw e;
@@ -157,16 +168,31 @@ public class TestSetStatistics {
         b.append("  diff StandardDeviation:" + standardDeviation);
       }
     }
-    b.append("\nGridscore:" + testSet.scoreGrid(grid));
+    b.append("\nGridscore:" + evaluator.scoreGrid(grid));
     return b.toString();
   }
 
   private Number[] getSortedNumberArray(final String diff) {
     Object[] objs = results.get(diff);
+    //remove null values TODO fix later gives false stats
+    ArrayList<Object> a = new ArrayList<Object>();
+    for (Object object : objs) {
+      if (object != null) {
+        a.add(object);
+      }
+    }
+    Object[] objectsNoNulls = a.toArray(new Object[0]);
     // convert to number array
-    Number[] diffs = new Number[objs.length];
-    System.arraycopy(objs, 0, diffs, 0, objs.length);
+    Number[] diffs = new Number[objectsNoNulls.length];
+    try {
+      System.arraycopy(objectsNoNulls, 0, diffs, 0, objectsNoNulls.length);
+    } catch (ArrayStoreException e) {
+      e.printStackTrace();
+      System.err.println("content of objs");
+      System.err.println(StringUtil.join("\n", objs));
+    }
     Arrays.sort(diffs);
     return diffs;
   }
+
 }

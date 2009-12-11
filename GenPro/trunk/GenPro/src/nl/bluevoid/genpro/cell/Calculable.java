@@ -53,6 +53,8 @@ public interface Calculable extends CellInterface{
   public void setCascadeUsedForOutput();
   
   public void validateLeadsToInputCell();
+  
+  public boolean isLeadsToInputCell();
 
   public void resetCallAndErrorCounter();
   

@@ -51,7 +51,7 @@ public class GewogenKansSelector<T>  {//TODO rename
   public void add(final T o, final int gewicht, final double score) {
     Debug.errorOnFalse(gewicht > 0, "gewicht=", gewicht);
     if (setup.hasMaxPerScore() && maxOfSameScoreIsReached(o, score)) {
-      // Debug.println("maxReached for "+score);
+       //Debug.println("maxReached for "+score);
     } else {
       items.add(o);
       highestNumber += gewicht;

@@ -33,6 +33,7 @@ import nl.bluevoid.genpro.cell.switx.SwitchCell;
 import nl.bluevoid.genpro.util.Debug;
 import nl.bluevoid.genpro.util.ReflectUtil;
 import nl.bluevoid.genpro.util.StringUtil;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -57,8 +58,8 @@ public class Util {
     return obj;
   }
 
-  public static final String[] clone(String[] strArray) {
-    String[] obj = strArray.clone();
+  public static final String[] clone(final String[] strArray) {
+    final String[] obj = strArray.clone();
     return obj;
   }
 
@@ -83,18 +84,20 @@ public class Util {
     return (int) Math.min(newVal, max);// take smallest > altijd onder max
   }
 
-  public static final void printCells(final CellInterface[] cells) {
+  public static final String toStringCells(final CellInterface[] cells) {
+    StringBuffer b = new StringBuffer();
     if (cells == null)
-      return;
+      return "No cells!";
     for (final CellInterface cell : cells) {
-      System.out.println("    nr:" + cell.getSerialNr() + " " + cell.toString());
+      b.append("    nr:" + cell.getSerialNr() + " " + cell.toString() + "\n");
     }
+    return b.toString();
   }
 
-  public static final ValueCell getRandomCell(ArrayList<ValueCell> cells) throws NoCellFoundException {
+  public static final ValueCell getRandomCell(final ArrayList<ValueCell> cells) throws NoCellFoundException {
     if (cells.size() == 0)
       throw new NoCellFoundException();
-    ValueCell cell = cells.get(random.nextInt(cells.size()));
+    final ValueCell cell = cells.get(random.nextInt(cells.size()));
     Debug.checkNotNull(cell, "cell");
     return cell;
   }
@@ -112,7 +115,7 @@ public class Util {
       arraylist.add(cell);
     }
   }
-  
+
   public static final void addCells(final ValueCell[] cells, final ArrayList arraylist) {
     for (final ValueCell cell : cells) {
       arraylist.add(cell);
@@ -131,7 +134,7 @@ public class Util {
     try {
       return Util.getRandomCell(typedCells);
     } catch (NoCellFoundException e) {
-      e.addInfo("\ncontentClass:" + contentClass);
+      e.addInfo("\n nocell found of type:" + contentClass);
       e.addInfo("cells:\n" + StringUtil.join("\n", cells.toArray()));
       e.addInfoSeperator();
       throw e;
@@ -139,9 +142,10 @@ public class Util {
   }
 
   public static final ValueCell getRandomCellFromCalculables(final Class<?> contentClass,
-      final Calculable[] cells) throws NoCellFoundException {
+      final Calculable[] cells, final boolean needsToLeadToInput) throws NoCellFoundException {
     final ArrayList<ValueCell> typedCells = new ArrayList<ValueCell>();
     for (final Calculable cell : cells) {
+      if(needsToLeadToInput && cell.isLeadsToInputCell())
       switch (cell.getCellType()) {
       case CallCell: {
         addIfMatches(contentClass, typedCells, (CallCell) cell);
@@ -155,12 +159,12 @@ public class Util {
         addIfMatches(contentClass, typedCells, (NumberSwitchCell) cell);
       }
         break;
-//      case IfCell: {
-//        for (ReferenceCell referenceCell : ((IfCell) cell).getValueCells()) {
-//          addIfMatches(contentClass, typedCells, referenceCell);
-//        }
-//      }
-//        break;
+      // case IfCell: {
+      // for (ReferenceCell referenceCell : ((IfCell) cell).getValueCells()) {
+      // addIfMatches(contentClass, typedCells, referenceCell);
+      // }
+      // }
+      // break;
       default:
         throw new IllegalArgumentException("not supported:" + cell.getCellType());
       }
@@ -171,7 +175,6 @@ public class Util {
   private static void addIfMatches(final Class<?> contentClass, final ArrayList<ValueCell> typedCells,
       final ValueCell cell) {
     final Class<?> content = cell.getValueType();
-    cell.isValueA_Number();
     if (content.equals(contentClass) || ReflectUtil.canCastNumber(content, contentClass)) {
       typedCells.add(cell);
     }
@@ -189,7 +192,8 @@ public class Util {
     return Util.getRandomCell(typedCells);
   }
 
-  public static final void printCallTargets(HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType) {
+  public static final void printCallTargets(
+      final HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType) {
     for (final Class<?> ret : callTargetsByReturnType.keySet()) {
       System.out.println("Methods for returnType:" + ret.getName());
       for (CallTarget ct : callTargetsByReturnType.get(ret)) {
@@ -206,30 +210,30 @@ public class Util {
     }
   }
 
-  public static final void addCallTargets(ArrayList<? extends ValueCell> cells,
-      HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType) {
+  public static final void addCallTargets(final ArrayList<? extends ValueCell> cells,
+      final HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType) {
     for (final ValueCell valueCell : cells) {
       valueCell.addCallTarget2(callTargetsByReturnType);
       // Util.addCallTarget2(valueCell, callTargetsByReturnType);
     }
   }
 
-//  private static final void addCallTarget2(ValueCell valueCell,
-//      HashMap<Class, ArrayList<CallTarget>> callTargetsByReturnType) {
-//    for (final Method m : valueCell.getAllMethods()) {
-//      CallTarget c = new CallTarget(valueCell, m);
-//      Class ret = ReflectUtil.getClassForPrimitive(m.getReturnType());
-//      ArrayList<CallTarget> arr = callTargetsByReturnType.get(ret);
-//      if (arr == null) {
-//        arr = new ArrayList<CallTarget>();
-//        callTargetsByReturnType.put(ret, arr);
-//      }
-//      arr.add(c);
-//    }
-//  }
+  // private static final void addCallTarget2(ValueCell valueCell,
+  // HashMap<Class, ArrayList<CallTarget>> callTargetsByReturnType) {
+  // for (final Method m : valueCell.getAllMethods()) {
+  // CallTarget c = new CallTarget(valueCell, m);
+  // Class ret = ReflectUtil.getClassForPrimitive(m.getReturnType());
+  // ArrayList<CallTarget> arr = callTargetsByReturnType.get(ret);
+  // if (arr == null) {
+  // arr = new ArrayList<CallTarget>();
+  // callTargetsByReturnType.put(ret, arr);
+  // }
+  // arr.add(c);
+  // }
+  // }
 
-  public static final void addCallTarget(Calculable valueCell,
-      HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType) {
+  public static final void addCallTarget(final Calculable valueCell,
+      final HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType) {
     if (valueCell instanceof ValueCell) {
       ((ValueCell) valueCell).addCallTarget2(callTargetsByReturnType);
       // addCallTarget2((ValueCell) valueCell, callTargetsByReturnType);
@@ -238,7 +242,7 @@ public class Util {
     }
   }
 
-  public static final void addUsedCellsRecursivly(CellMap used, ValueCell cc) {
+  public static final void addUsedCellsRecursivly(final CellMap used, ValueCell cc) {
     switch (cc.getCellType()) {
     case CallCell:
       addUsedCellsRecursivly(used, (CallCell) cc);
@@ -256,7 +260,7 @@ public class Util {
     }
   }
 
-  private static final void addUsedCellsRecursivly(CellMap used, CallCell cc) {
+  private static final void addUsedCellsRecursivly(final CellMap used, final CallCell cc) {
     used.putByName(cc);
     used.putByName(cc.getTargetCell());
     used.putByName(cc.getParams());
@@ -270,10 +274,10 @@ public class Util {
       }
     }
   }
-  
-  private static final void addUsedCellsRecursivly(CellMap used, SwitchCell cc) {
+
+  private static final void addUsedCellsRecursivly(final CellMap used, final SwitchCell cc) {
     used.putByName(cc);
-    used.putByName(cc.getSwitchValueCell());    
+    used.putByName(cc.getSwitchValueCell());
   }
 
   private static final ValueCell[] emptyValueCell = new ValueCell[0];
@@ -292,4 +296,5 @@ public class Util {
       return paramCells;
     }
   }
+
 }

@@ -23,6 +23,7 @@ import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.operations.BlackList;
 import nl.bluevoid.genpro.util.Debug;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -36,7 +37,6 @@ public class Setup {
 
   private String callCellNamePrefix = "c";
   private int callCellNumber = 0;
-  private int ifCellNr = 0;
   private int switchCellNr = 0;
   private Class<?>[] callCellValueTypes = new Class[0];
   private Class<?>[] switchCellValueTypes = new Class[0];
@@ -46,22 +46,33 @@ public class Setup {
 
   private int generationSize = 1000;
 
-  private int mutatePercentage = 15;
-  private int crossingPercentage=100;
+  private int mutatePercentage = 20;
+  private int crossingPercentage = 80;
 
   private boolean evaluateMultiThreaded = false;
 
-  private boolean hasMaxperScore = false;
-  private int maxPerScore = -1;
+  private boolean hasMaxperScore = true;
+  private int maxPerScore = 30;
 
-  private final String name;
+  private String name = "unnamed";
 
-  private double minimumScoreForSaving = Double.MAX_VALUE;
+  // disable auto storing
+  private double minimumScoreForSaving = Double.NEGATIVE_INFINITY;
 
   private int stopAtGeneration = -1;
   private double stopAtScore = -1;
 
   private Class<?> solutionInterface;
+
+  private boolean gridHistoryTracking = false;
+
+  private boolean junkDnaShown = false;
+
+  private boolean debugInfoVisible = false;
+
+  public boolean isGridHistoryTrackingOn() {
+    return gridHistoryTracking;
+  }
 
   public Class<?> getSolutionInterface() {
     return solutionInterface;
@@ -76,13 +87,16 @@ public class Setup {
   }
 
   public Setup(String name) {
-    this.name = name;
+    this.setName(name);
 
   }
 
-  public Setup(Object creator) {
-    this(creator.getClass().getSimpleName());
+  public Setup() {
   }
+
+  // public Setup(Object creator) {
+  // this(creator.getClass().getSimpleName());
+  // }
 
   public void setCallCells(int number, String namePrefix, Class<?>... classes) {
     // Debug.errorOnFalse(number > 0, "callcell number must be 1 or more!");
@@ -148,7 +162,11 @@ public class Setup {
   }
 
   public void setLibraryCells(LibraryCell... libraryCells) {
-    this.libraryCells = libraryCells;
+    if (this.libraryCells.length == 0) {
+      this.libraryCells = libraryCells;
+    }else{
+      throw new IllegalStateException("Librarycell are set already!");
+    }
   }
 
   public Grid generateSolution() {
@@ -168,18 +186,20 @@ public class Setup {
   public int getMutatePercentage() {
     return mutatePercentage;
   }
-  
-  public int getCrossingPercentage(){
+
+  public int getCrossingPercentage() {
     return crossingPercentage;
   }
-  
-  public void setCrossingPercentage(int percentage){
-    this.crossingPercentage=percentage;
+
+  public void setCrossingPercentage(int percentage) {
+    this.crossingPercentage = percentage;
   }
-/**
- * 
- * @param mutatePercentage between 0 and 100, default=15
- */
+
+  /**
+   * 
+   * @param mutatePercentage
+   *          between 0 and 100, default=15
+   */
   public void setMutatePercentage(int mutatePercentage) {
     Debug.checkRange(mutatePercentage, 0, 100);
     this.mutatePercentage = mutatePercentage;
@@ -192,14 +212,6 @@ public class Setup {
   public void setEvaluateMultiThreaded(boolean b) {
     evaluateMultiThreaded = b;
   }
-
-//  public void addIfCell(int nr) {
-//    this.ifCellNr = nr;
-//  }
-
-//  public int getIfCellNr() {
-//    return ifCellNr;
-//  }
 
   public boolean hasMaxPerScore() {
     return hasMaxperScore;
@@ -264,5 +276,45 @@ public class Setup {
 
   public void addAllowedMethodsFilter(Class<?> targetClass, String... methodNames) {
     BlackList.addAllowedMethodsFilter(targetClass, methodNames);
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  /**
+   * allows to track the history (create mutate etc) of each solution
+   * 
+   * @param b
+   *          default false
+   */
+  public void setGridHistoryTracking(boolean b) {
+    gridHistoryTracking = b;
+  }
+
+  /**
+   * 
+   * @param junkDnaShown
+   *          default false
+   */
+  public void setJunkDnaShown(boolean junkDnaShown) {
+    this.junkDnaShown = junkDnaShown;
+  }
+
+  public boolean isJunkDnaShown() {
+    return junkDnaShown;
+  }
+
+  /**
+   * 
+   * @param debugInfoVisible
+   *          default false
+   */
+  public void setDebugInfoVisible(boolean debugInfoVisible) {
+    this.debugInfoVisible = debugInfoVisible;
+  }
+
+  public boolean isDebugInfoVisible() {
+    return debugInfoVisible;
   }
 }

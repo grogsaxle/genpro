@@ -23,4 +23,8 @@ import java.util.EventListener;
  */
 public interface ResultListener extends EventListener{
   public void newBestResult(Grid g);
+  
+  public void startUpProgress(int createdIndividuals);
+  
+  public void newStats(int generationnr, long millisPerGeneration);
 }

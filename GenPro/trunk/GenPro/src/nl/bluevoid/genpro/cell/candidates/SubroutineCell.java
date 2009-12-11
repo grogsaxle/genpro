@@ -112,4 +112,9 @@ public class SubroutineCell extends Cell implements Calculable {
     // TODO Auto-generated method stub
     throw new IllegalStateException("resetCallAndErrorCounter is not implemented yet");
   }
+
+  public boolean isLeadsToInputCell() {
+    // TODO Auto-generated method stub
+    throw new IllegalStateException("isLeadsToInputCell is not implemented yet");
+  }
 }

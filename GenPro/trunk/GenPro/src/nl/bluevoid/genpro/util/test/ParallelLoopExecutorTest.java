@@ -18,10 +18,8 @@ package nl.bluevoid.genpro.util.test;
 
 import java.util.Arrays;
 
-import nl.bluevoid.genpro.util.ParallelLoopExecutor;
-import nl.bluevoid.genpro.util.ParallelLoopExecutor.Scheduling;
-
 import junit.framework.TestCase;
+import nl.bluevoid.genpro.util.ParallelLoopExecutor;
 /**
  * @author Rob van der Veer
  * @since 1.0

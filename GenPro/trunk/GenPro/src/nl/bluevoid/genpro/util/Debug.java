@@ -202,6 +202,9 @@ public class Debug {
       sb.append(printException.getMessage());
 
       StackTraceElement[] el = printException.getStackTrace();
+      if (el.length == 0) {
+        sb.append("No stacktrace!!!\n");
+      }
       for (int i = 0; i < el.length; i++) {
         sb.append("\n   at ");
         sb.append(el[i]);
@@ -211,5 +214,4 @@ public class Debug {
     }
     return sb.toString();
   }
-
 }

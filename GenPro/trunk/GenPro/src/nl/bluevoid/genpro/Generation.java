@@ -20,11 +20,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
+import nl.bluevoid.genpro.cell.NoCellFoundException;
 import nl.bluevoid.genpro.util.Calc;
 import nl.bluevoid.genpro.util.Debug;
 import nl.bluevoid.genpro.util.GewogenKansSelector;
 import nl.bluevoid.genpro.util.ParallelLoopExecutor;
 import nl.bluevoid.genpro.util.Sneak;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -36,7 +38,7 @@ public class Generation {
   private final int nr;
   private Grid bestSolution;
   private double bestScore = Double.MAX_VALUE;
-
+  private boolean stopRunning = false;
   public int nanAndInfinateCounter = 0;
 
   private final Setup setup;
@@ -65,8 +67,8 @@ public class Generation {
     // printProgramsWithSameScore(4);
     gws = getSelector();
     // create next gen
-    Generation next = new Generation(nr + 1, setup);
-
+    final Generation next = new Generation(nr + 1, setup);
+    final String histPrefix = "Generation " + next.getNr() + ": ";
     // Debug.println("Adding best solution:" + bestSolution.getScore()+ " "+bestSolution.toString());
     // add best solution + mutated
     bestSolution.resetCellCallCounters();
@@ -75,54 +77,75 @@ public class Generation {
 
     // TODO beste herberekenen gaat fout in multithreading
 
-    Grid b2 = bestSolution.clone();
+    final Grid b2 = bestSolution.clone();
     b2.resetCellCallCounters();
     b2.resetGridExecutionErrors();
-    b2.mutate();
-    next.addSolution(b2);
-
-    int maxIndividuals = setup.getGenerationSize() - next.getSize();
-    int added = 0;
-    if (gws.size() < setup.getGenerationSize() / 2) {
-      Debug.println("gws.size():" + gws.size());
-      System.err.println("gws.size():" + gws.size());
+    try {
+      b2.mutate(histPrefix);
+      next.addSolution(b2);
+    } catch (NoCellFoundException e) {
+      // mutation failed, so skip
     }
+
+    final int maxIndividuals = setup.getGenerationSize() - next.getSize();
+
+    if (gws.size() < setup.getGenerationSize() / 2) {
+      Debug.printErrln("gws.size():" + gws.size());
+    }
+
+    final String historyString = histPrefix + "Created by crossing";
+
+    int added = 0;
     while (added < maxIndividuals) {
-      Grid s1 = gws.getRandomItem();
-      Grid s2 = gws.getRandomItem();
+      final Grid s1 = gws.getRandomItem();
+      final Grid s2 = gws.getRandomItem();
 
-      Grid g1 = s1.clone();
-      Grid g2 = s2.clone();
-
-      Grid[] s34 = random.nextInt(100) < setup.getCrossingPercentage() ? g1.cross(g2) : new Grid[] { g1, g2 };
+      final Grid g1 = s1.clone();
+      final Grid g2 = s2.clone();
+      final boolean cross = random.nextInt(100) < setup.getCrossingPercentage();
+      final Grid[] s34 = cross ? g1.cross(g2, getNr()) : new Grid[] { g1, g2 };
 
       // grids might be null!!!!
-      for (Grid grid : s34) {
+      for (final Grid grid : s34) {
         if (grid != null) {
-          grid.mutateIfNeeded();
-          grid.recalcIsUsedForOutput();
-          next.addSolution(grid);
-          added++;
+          try {
+            if (cross && setup.isGridHistoryTrackingOn()) {
+              grid.addToHistory(historyString);
+            }
+            if (!cross) {// TODO fix this: cross has a overhand on mutate!!
+              final boolean mutate = random.nextInt(100) < setup.getMutatePercentage();
+              if (mutate) {
+                grid.mutate(histPrefix);
+              }
+            }
+            next.addSolution(grid);
+
+            added++;
+          } catch (NoCellFoundException e) {
+            // mutation failed, not added to generation next, so skip
+          }
         }
       }
     }
     return next;
   }
 
-  public void evaluate(TestSet testSet) {
+  public void evaluate( TestSetSolutionEvaluator evaluator) {
     if (setup.evaluateMultiThreaded()) {
-      evaluateMultiThreaded(testSet);
+      evaluateMultiThreaded(evaluator);
       evaluated = true;// TODO not correct find end of threadruns
     } else {
-      evaluateSingleThreaded(testSet);
+      evaluateSingleThreaded(evaluator);
       evaluated = true;
     }
   }
 
-  private void evaluateSingleThreaded(TestSet testSet) {
+  private void evaluateSingleThreaded(TestSetSolutionEvaluator evaluator) {
     for (Grid sol : getSolutions()) {
       try {
-        evaluate(testSet, sol);
+        evaluate(evaluator, sol);
+        if (stopRunning)
+          break;
       } catch (Throwable e) {
         Debug.printFullStackTrace(e);
         System.exit(0);
@@ -130,12 +153,12 @@ public class Generation {
     }
   }
 
-  private void evaluateMultiThreaded(final TestSet testSet) {
+  private void evaluateMultiThreaded(final TestSetSolutionEvaluator evaluator) {
     // create ThreadLocal so every thread gets a clone of testset, initialValue is called when get() is called
-    final ThreadLocal<TestSet> tl = new ThreadLocal<TestSet>() {
+    final ThreadLocal<TestSetSolutionEvaluator> tl = new ThreadLocal<TestSetSolutionEvaluator>() {
       @Override
-      public TestSet initialValue() {
-        return testSet.clone();
+      public TestSetSolutionEvaluator initialValue() {
+        return evaluator; //TODO do we need a clone here? .clone()
       }
     };
 
@@ -143,21 +166,21 @@ public class Generation {
 
     ParallelLoopExecutor ple = new ParallelLoopExecutor(0, getSolutions().size(), 2,
         ParallelLoopExecutor.Scheduling.DYNAMIC_SCHEDULING) {
-
       @Override
       public void loopDoRange(final int start, final int end) {
         // Debug.println("Starting execution from "+start+" to "+end);
         int i = start;
         Grid gr = null;
         try {
-          final TestSet localTestSet = tl.get();
+          final TestSetSolutionEvaluator localTestSet = tl.get();
           for (; i < end; i++) {
             // System.out.println("eval:" + i + " " + Thread.currentThread().getName());
             // System.out.flush();
             gr = solutions.get(i);
             // grids.add(gr);
             evaluate(localTestSet, gr);
-
+            if (stopRunning)
+              break;
             if (!continuRunning) {
               JavaGenerator.printJavaProgram(gr, "last " + i + " from " + Thread.currentThread().getName(),
                   "nl.bluevoid.gp", true);
@@ -183,10 +206,10 @@ public class Generation {
     }
   }
 
-  private void evaluate(final TestSet testSet, final Grid sol) {
+  private void evaluate(final TestSetSolutionEvaluator evaluator, final Grid sol) {
     // Debug.println("score:" + score);
     try {
-      final double score = testSet.evaluate(sol);
+      final double score = evaluator.evaluate(sol);
       sol.setScore(score);
 
       if (Calc.isNaNorInfinite(score)) {
@@ -201,7 +224,7 @@ public class Generation {
       }
     } catch (Throwable t) {
       System.err.println(JavaMethodGenerator.getJavaProgram(sol, "errorClass", "nl.bluevoid.gp", null, t
-          .getMessage(), true));
+          .getMessage(), setup.isDebugInfoVisible(), setup.isJunkDnaShown()));
       Sneak.sneakyThrow(t);
     }
   }
@@ -221,12 +244,27 @@ public class Generation {
     for (int i = 0; i < selectmax; i++) {
       final Grid s = sortedSolutions.get(i);
       final double score = s.getScore();
-      final int gewicht = scoreWeigth(score, min, max);
-      if (gewicht > 0) {
-        gws.add(s, gewicht, score);
-      }
+      final int gewicht = Math.max(1, scoreWeigth(score, min, max));
+      gws.add(s, gewicht, score);
+      // } else {
+      // Debug.println(getNr()+" throwing away solution with score "+score +" & weight " +
+      // gewicht+" min="+min+" max="+max);
+      // }
     }
     return gws;
+  }
+
+  /**
+   * 
+   * @param score
+   * @param min
+   * @param max
+   * @return 0 if score = max, TODO fix this!
+   */
+  private int scoreWeigth(final double score, final double min, final double max) {
+    final double zeroto1 = (score - min) / (max - min);
+    Debug.checkRange(zeroto1, 0, 1);
+    return (int) Math.pow((100 - (zeroto1 * 100)), 2);
   }
 
   /**
@@ -270,12 +308,6 @@ public class Generation {
     return total / max;
   }
 
-  private int scoreWeigth(final double score, final double min, final double max) {
-    final double zeroto1 = (score - min) / (max - min);
-    Debug.checkRange(zeroto1, 0, 1);
-    return (int) Math.pow((100 - (zeroto1 * 100)), 2);
-  }
-
   public ArrayList<Grid> getSolutions() {
     return solutions;
   }
@@ -290,5 +322,9 @@ public class Generation {
 
   public int getSize() {
     return solutions.size();
+  }
+
+  public void stopRunning() {
+    stopRunning = true;
   }
 }

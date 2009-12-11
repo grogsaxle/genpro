@@ -38,7 +38,7 @@ public class Stopwatch {
   }
 
   public void printEllapsedTime() {
-    System.out.println(action + " took " + ellapsedSeconds());
+    System.out.println(action + " took " + ellapsedSeconds() +" seconds.");
   }
 
 }

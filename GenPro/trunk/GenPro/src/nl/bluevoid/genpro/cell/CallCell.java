@@ -31,6 +31,7 @@ import nl.bluevoid.genpro.util.ReflectUtil;
 import nl.bluevoid.genpro.util.Sneak;
 import nl.bluevoid.genpro.util.StringUtil;
 import nl.bluevoid.genpro.util.XMLBuilder;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -179,7 +180,7 @@ public class CallCell extends ValueCell implements Calculable {
         + " on " + targetCellStr;
   }
 
-  //@Override
+  // @Override
   public void restoreConnections(final CellMap map) throws NoCellFoundException {
     // replace params
     for (int i = 0; i < params.length; i++) {
@@ -205,7 +206,7 @@ public class CallCell extends ValueCell implements Calculable {
     }
   }
 
-  //@Override
+  // @Override
   public void setCascadeUsedForOutput() {
     if (!isUsedForOutput()) {
       // Debug.println("setUsedForOutput called on "+this);
@@ -231,7 +232,11 @@ public class CallCell extends ValueCell implements Calculable {
         e.printStackTrace();
       }
     } else {
-      connectCell(callTargetsByReturnType, allParamCells);
+      try {
+        connectCell(callTargetsByReturnType, allParamCells);
+      } catch (NoCellFoundException e) {
+       Debug.printErrln("Mutation failed "+e.getMessage());
+      }
     }
   }
 
@@ -256,7 +261,7 @@ public class CallCell extends ValueCell implements Calculable {
   }
 
   public void connectCell(final HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType,
-      final ArrayList<ValueCell> allParamCells) {
+      final ArrayList<ValueCell> allParamCells) throws NoCellFoundException {
     boolean found = false;
     int count = 0;
     final Class<?> returnType = getValueType();
@@ -279,6 +284,8 @@ public class CallCell extends ValueCell implements Calculable {
     if (methods.size() == 0) {
       throw new IllegalStateException("no calls deliver a method for return type:" + returnType);
     }
+
+    NoCellFoundException noCellFoundException = null;
     while (count < 300 && !found) {
       count++;
       try {
@@ -295,12 +302,14 @@ public class CallCell extends ValueCell implements Calculable {
         setParams(paramCells);
         found = true;
       } catch (NoCellFoundException e) {
+        noCellFoundException = e;
         // Debug.println("no cell found!");
       }
     }
 
     if (!found) {
-      throw new IllegalStateException("no solution after " + count + " tries for cell:" + this);
+      noCellFoundException.addInfo("no solution after " + count + " tries for cell:" + this);
+     throw noCellFoundException;
     }
     validateLeadsToInputCell();
   }
@@ -317,7 +326,7 @@ public class CallCell extends ValueCell implements Calculable {
     return errored;
   }
 
-  //@Override
+  // @Override
   public void resetCallAndErrorCounter() {
     errored = 0;
     calced = 0;

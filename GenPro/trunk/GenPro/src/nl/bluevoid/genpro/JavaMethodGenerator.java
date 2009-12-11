@@ -31,67 +31,60 @@ import nl.bluevoid.genpro.cell.switx.NumberSwitchCell;
 import nl.bluevoid.genpro.cell.switx.SwitchCell;
 import nl.bluevoid.genpro.cell.switx.SwitchOption;
 import nl.bluevoid.genpro.operations.BooleanOperations;
+import nl.bluevoid.genpro.operations.IfOperations;
 import nl.bluevoid.genpro.operations.NumberOperations;
 import nl.bluevoid.genpro.util.Debug;
 import nl.bluevoid.genpro.util.StringUtil;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
  */
 public class JavaMethodGenerator {
-  HashMap<String, String> imports = new HashMap<String, String>();
+  private final HashMap<String, String> imports = new HashMap<String, String>();
 
-  ArrayList<String> globalAttributes = new ArrayList<String>();
+  private final ArrayList<String> globalAttributes = new ArrayList<String>();
 
-  // ArrayList<String> methods = new ArrayList<String>();
+  private final ArrayList<String> program = new ArrayList<String>();
 
-  ArrayList<String> program = new ArrayList<String>();
-
-  ArrayList<String> inputs = new ArrayList<String>();
+  private final ArrayList<String> inputs = new ArrayList<String>();
 
   private boolean debug;
 
+  private boolean showJunkDna;
+
   private ReferenceCell outputCell;
 
-  public static void printJavaProgram(Grid grid, String className, String packageName,
-      Class<?> implInterface, String remark, boolean debug) {
-    String java = getJavaProgram(grid, className, packageName, implInterface, remark, debug);
-    System.out.println(java);
-  }
-
-  public static String getJavaProgram(Grid grid2, String className, String packageName,
-      Class<?> implInterface, String remark, boolean debug) {
-    Debug.checkNotNull(grid2, "grid2");
+  public static String getJavaProgram(final Grid grid,final  String className,final String packageName,
+      final Class<?> implInterface,final String remark,final boolean debug,final boolean showJunkDNA) {
+    Debug.checkNotNull(grid, "grid");
     JavaMethodGenerator gen = new JavaMethodGenerator();
-    return gen.getProgram(className, grid2, packageName, implInterface, remark, debug);
+    return gen.getProgram(className, grid, packageName, implInterface, remark, debug, showJunkDNA);
   }
 
-  public void addImport(String packageOrClassName) {
+  public void addImport(final String packageOrClassName) {
     imports.put(packageOrClassName, packageOrClassName);
   }
 
-  public void addGlobalAttribute(ValueCell cell, Object value) {
-    String v = value == null ? "" : " = " + value.toString();
-    String f = value == null ? "" : "final ";
+  public void addGlobalAttribute(final ValueCell cell, final Object value) {
+    final String v = value == null ? "" : " = " + value.toString();
+    final String f = value == null ? "" : "final ";
     globalAttributes.add(f + cell.getValueType().getSimpleName() + " " + cell.getName() + getDebugInfo(cell)
         + v + ";" + (cell.isUsedForOutput() ? "  //to output" : ""));
   }
 
   // add more debug info
-  private String getDebugInfo(CellInterface cell) {
+  private String getDebugInfo(final CellInterface cell) {
     return (debug ? " (" + cell.getSerialNr() + ") " : "");
   }
 
-  public void addCell(Calculable cell) {
-    if (cell.isUsedForOutput()) {
+  public void addCell(final Calculable cell) {
+    if (showJunkDna || cell.isUsedForOutput()) {
       switch (cell.getCellType()) {
       case CallCell:
         // addGlobalAttribute((CallCell) cell, null);
         addCall((CallCell) cell, 1);
         break;
-//      case IfCell:
-//        addCall((IfCell) cell);
-//        break;
       case BooleanSwitchCell:
         addCall((BooleanSwitchCell) cell);
         break;
@@ -104,15 +97,15 @@ public class JavaMethodGenerator {
     }
   }
 
-  public void addCell(InputCell cell) {
+  public void addCell(final InputCell cell) {
     inputs.add(cell.getValueType().getSimpleName() + " " + cell.getName());
   }
 
-  private void addCell(ConstantCell cell) {
+  private void addCell(final ConstantCell cell) {
     addGlobalAttribute(cell, cell.getValue());
   }
 
-  public void addCell(ReferenceCell cell) {
+  public void addCell(final ReferenceCell cell) {
     if (outputCell == null) {
       this.outputCell = cell;
     } else {
@@ -121,16 +114,16 @@ public class JavaMethodGenerator {
     }
   }
 
-  public String getProgram(String className, Grid grid, String packageName, Class<?> implInterface,
-      String remark, boolean debug) {
+  public String getProgram(final String className, final Grid grid, final String packageName,
+      final Class<?> implInterface, final String remark, final boolean debug, final boolean showJunkDNA) {
     this.debug = debug;
+    this.showJunkDna = showJunkDNA;
     processCells(grid);
 
-    String methodName = StringUtil.decapitalize(className);
-    StringBuffer b = new StringBuffer();
+    final StringBuffer b = new StringBuffer();
     b.append("package " + packageName + ";");
 
-    for (String s : imports.keySet()) {
+    for (final String s : imports.keySet()) {
       if (!s.startsWith("java.lang.")) {
         b.append("\nimport ");
         b.append(s);
@@ -143,52 +136,48 @@ public class JavaMethodGenerator {
     if (implInterface != null)
       b.append(" implements " + implInterface.getName());
     b.append(" {");
-
-    // method signature
-    b.append("\n\npublic " + outputCell.getValueType().getSimpleName() + " " + methodName + "(");
-    b.append(StringUtil.join(", ", inputs.toArray(new String[0])));
-    b.append("){\n");
-
-    b.append("\t//constants");
-    for (String s : globalAttributes) {
+    
+    b.append("\n\t//constants");
+    for (final String s : globalAttributes) {
       b.append("\n\t");
       b.append(s);
     }
 
-    b.append("\n\n\t//callcells");
+    // method signature
+    b.append("\n\npublic " + outputCell.getValueType().getSimpleName() + " calc(");
+    b.append(StringUtil.join(", ", inputs.toArray(new String[0])));
+    b.append("){\n\t//callcells");
 
-    for (String s : program) {
+    for (final String s : program) {
       b.append("\n");
       b.append(s);
     }
-    b.append("\n\n\t");
-
-    b.append("return " + outputCell.getReferedCell().getName());
+    b.append("\n\n\treturn " + outputCell.getReferedCell().getName()+";");
 
     b.append("\n}}");
     return b.toString();
   }
 
-  private void processCells(Grid grid) {
-    for (InputCell c : grid.getInputCells()) {
+  private void processCells(final Grid grid) {
+    for (final InputCell c : grid.getInputCells()) {
       addCell(c);
     }
 
-    for (ConstantCell c : grid.getConstantCells()) {
+    for (final ConstantCell c : grid.getConstantCells()) {
       addCell(c);
     }
 
     // TODO more cells
-    for (Calculable c : grid.getCallCells()) {
+    for (final Calculable c : grid.getCallCells()) {
       addCell(c);
     }
 
-    for (ReferenceCell c : grid.getOutputCells()) {
+    for (final ReferenceCell c : grid.getOutputCells()) {
       addCell(c);
     }
   }
 
-  private void addCall(CallCell cell, int indent) {
+  private void addCall(final CallCell cell, final int indent) {
     String call = tab(indent);
     call += cell.getValueType().getSimpleName() + " " + cell.getName() + getDebugInfo(cell) + " = ";
     call += getCallMethod(cell);
@@ -209,40 +198,55 @@ public class JavaMethodGenerator {
    * @param callCell
    * @param indent
    */
-  private void addCall(ReferenceCell referenceCell, CallCell callCell, int indent) {
-    String call = tab(indent);
-    call += referenceCell.getName() + getDebugInfo(referenceCell) + " = ";
-    call += getCallMethod(callCell);
-    program.add(call);
-  }
-
+  // private void addCall(ReferenceCell referenceCell, CallCell callCell, int indent) {
+  // String call = tab(indent);
+  // call += referenceCell.getName() + getDebugInfo(referenceCell) + " = ";
+  // call += getCallMethod(callCell);
+  // program.add(call);
+  // }
   private String tab(int indent) {
-    String call = "";
-    for (int i = 0; i < indent; i++) {
-      call += "\t";
+    switch (indent) {
+    case 0:
+      return "";
+    case 1:
+      return "\t";
+    case 2:
+      return "\t\t";
+    case 3:
+      return "\t\t\t";
+    case 4:
+      return "\t\t\t\t";
+    case 5:
+      return "\t\t\t\t\t";
+    default:
+      String call = "";
+      for (int i = 0; i < indent; i++) {
+        call += "\t";
+      }
+      return call;
     }
-    return call;
   }
 
-  private String getCallMethod(CallCell cell) {
+  private String getCallMethod(final CallCell cell) {
     String call = "";
-    if (cell.getTargetCell().getValueType().equals(NumberOperations.class)) {
+    final Class<?> valueClassType = cell.getTargetCell().getValueType();
+    final String methodName = cell.getTargetMethod().getName();
+
+    if (valueClassType.equals(NumberOperations.class)) {
       // we have a +,-,*,/,%, pow
-      String op = NumberOperations.getJavaSyntax(cell.getTargetMethod().getName());
-
-      String operation = joinParams(cell.getParams(), " " + op + " ");
-      if (cell.getParams().length == 1)// solve single param operator:postfix
-        operation += op;
-      call += operation + ";";
-    } else if (cell.getTargetCell().getValueType().equals(BooleanOperations.class)) {
+      final String op = NumberOperations.getJavaSyntax(methodName);
+      call = createJavaLine(cell, call, op);
+    } else if (valueClassType.equals(BooleanOperations.class)) {
       // we have a <,>,==,!=,&&,||, etc
-      String op = BooleanOperations.getJavaSyntax(cell.getTargetMethod().getName());
-
-      String operation = cell.hasParams() ? joinParams(cell.getParams(), " " + op + " ") : op;
-      call += operation + ";";
+      final String op = BooleanOperations.getJavaSyntax(methodName);
+      call = createJavaLine(cell, call, op);
+    } else if (valueClassType.equals(IfOperations.class)) {
+      // we have xxxxIf
+      final String op = IfOperations.getJavaSyntax(methodName);
+      call = createJavaLine(cell, call, op);
     } else {
       // we have a method call
-      String paramsStr = joinParams(cell.getParams(), ",");
+      final String paramsStr = joinParams(cell.getParams(), ",");
       call += cell.getTargetCell().getName() + "." + cell.getTargetMethod().getName() + "(" + paramsStr
           + ");";
       addImport(cell.getTargetCell().getValueType().getName());
@@ -254,22 +258,40 @@ public class JavaMethodGenerator {
     return call;
   }
 
-//  private void addCall(IfCell cell) {
-//    program.add(tab(1) + "if ( " + cell.getBooleanExpression().getName() + " ){");
-//    for (int i = 0; i < cell.getOnTrueList().size(); i++) {
-//      addCall(cell.getValueCells().get(i), cell.getOnTrueList().get(i), 2);
-//    }
-//    program.add(tab(1) + "} else {");
-//    for (int i = 0; i < cell.getOnFalseList().size(); i++) {
-//      addCall(cell.getValueCells().get(i), cell.getOnFalseList().get(i), 2);
-//    }
-//    program.add(tab(1) + "}");
-//  }
+  private String createJavaLine(final CallCell cell, final String call, final String op) {
+    final boolean isFillInCode = op.indexOf("${") >= 0;
+    String operation = null;
+    if (isFillInCode) {
+      operation = pasteCellNamesInPlaces(op, cell.getParams());
+    } else {
+      operation = joinParams(cell.getParams(), " " + op + " ");
+      if (cell.getParams().length <= 1)// solve single or zero param operator:postfix
+        operation += op;
+    }
+    return operation + ";";
+  }
 
-  private void addCall(BooleanSwitchCell cell) {
+  private static String pasteCellNamesInPlaces(final String text, final ValueCell[] params) {
+    final int start = text.indexOf("${");
+    // is tag found?
+    String result = text;
+    if (start >= 0) {
+      final int end = text.indexOf("}", start);
+      if (end < 0)
+        throw new IllegalArgumentException("after opening tag '${' no closing tag '}' found in: " + text);
+      final String tag = text.substring(start + 2, end);
+      final String replacement = params[Integer.parseInt(tag)].getName();
+      // replace tag
+      final String textNew = text.substring(0, start) + replacement + text.substring(end + 1);
+      // find next tag recursive...
+      result = pasteCellNamesInPlaces(textNew, params);
+    }
+    return result;
+  }
+
+  private void addCall(final BooleanSwitchCell cell) {
     program.add(tab(1) + cell.getValueType().getSimpleName() + " " + cell.getName() + " = null;");
     program.add(tab(1) + "if ( " + cell.getSwitchValueCell().getName() + " ){");
-
     addCall(cell.getOptions().get(1), 2);
     program.add(tab(1) + "} else {");
     addCall(cell.getOptions().get(0), 2);
@@ -295,7 +317,7 @@ public class JavaMethodGenerator {
   }
 
   private String joinParams(ValueCell[] cells, String seperator) {
-    String[] names = new String[cells.length];
+    final String[] names = new String[cells.length];
     for (int i = 0; i < names.length; i++) {
       names[i] = cells[i].getName() + getDebugInfo(cells[i]);
     }

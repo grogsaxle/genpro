@@ -45,7 +45,7 @@ public class NumberOperations {
       return "%";
     }
     if("pow".equals(methodName)){
-      return "^2";
+      return "${0} * ${0}";
     }
     throw new IllegalArgumentException("No javaSyntax for:"+methodName);
   }

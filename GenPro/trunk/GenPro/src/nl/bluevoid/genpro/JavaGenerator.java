@@ -27,6 +27,7 @@ import nl.bluevoid.genpro.cell.InputCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.cell.ValueCell;
 import nl.bluevoid.genpro.operations.BooleanOperations;
+import nl.bluevoid.genpro.operations.IfOperations;
 import nl.bluevoid.genpro.operations.NumberOperations;
 import nl.bluevoid.genpro.util.Debug;
 import nl.bluevoid.genpro.util.StringUtil;
@@ -190,12 +191,12 @@ public class JavaGenerator {
    * @param callCell
    * @param indent
    */
-  private void addCall(ReferenceCell referenceCell, CallCell callCell, int indent) {
-    String call = getIndent(indent);
-    call += referenceCell.getName() + getDebugInfo(referenceCell) + " = ";
-    call += getCallMethod(callCell);
-    program.add(call);
-  }
+//  private void addCall(ReferenceCell referenceCell, CallCell callCell, int indent) {
+//    String call = getIndent(indent);
+//    call += referenceCell.getName() + getDebugInfo(referenceCell) + " = ";
+//    call += getCallMethod(callCell);
+//    program.add(call);
+//  }
 
   private String getIndent(int indent) {
     String call = "";
@@ -207,17 +208,21 @@ public class JavaGenerator {
 
   private String getCallMethod(CallCell cell) {
     String call = "";
-    if (cell.getTargetCell().getValueType().equals(NumberOperations.class)) {
-      // we have a +,-,*,/,%
-      String op = NumberOperations.getJavaSyntax(cell.getTargetMethod().getName());
-      String operation = joinParams(cell.getParams(), " " + op + " ");
-      call += operation + ";";
-    } else if (cell.getTargetCell().getValueType().equals(BooleanOperations.class)) {
-      // we have a <,>,==,!=,&&,||, etc
-      String op = BooleanOperations.getJavaSyntax(cell.getTargetMethod().getName());
+    final Class<?> valueClassType = cell.getTargetCell().getValueType();
+    final String methodName = cell.getTargetMethod().getName();
 
-      String operation = cell.hasParams() ? joinParams(cell.getParams(), " " + op + " ") : op;
-      call += operation + ";";
+    if (valueClassType.equals(NumberOperations.class)) {
+      // we have a +,-,*,/,%, pow
+      final String op = NumberOperations.getJavaSyntax(methodName);
+      call = createJavaLine(cell, call, op);
+    } else if (valueClassType.equals(BooleanOperations.class)) {
+      // we have a <,>,==,!=,&&,||, etc
+      final String op = BooleanOperations.getJavaSyntax(methodName);
+      call = createJavaLine(cell, call, op);
+    } else if (valueClassType.equals(IfOperations.class)) {
+      // we have xxxxIf
+      String op = IfOperations.getJavaSyntax(methodName);
+      call = createJavaLine(cell, call, op);
     } else {
       // we have a method call
       String paramsStr = joinParams(cell.getParams(), ",");
@@ -227,23 +232,42 @@ public class JavaGenerator {
     }
     call += "  //" + (cell.isUsedForOutput() ? "to output, " : "");
     call += (cell.isLeadsToInputCell() ? "to input" : "");
+    call += ", calls/errors:" + cell.getCalced() + "/" + cell.getErrored();
     addImport(cell.getValueType().getName());
     return call;
   }
 
-//  private void addCall(IfCell cell) {
-//    program.add(getIndent(1) + "if ( " + cell.getBooleanExpression().getName() + " ){");
-//    for (int i = 0; i < cell.getOnTrueList().size(); i++) {
-//      addCall(cell.getValueCells().get(i), cell.getOnTrueList().get(i), 2);
-//    }
-//    program.add(getIndent(1) + "} else {");
-//    for (int i = 0; i < cell.getOnFalseList().size(); i++) {
-//      addCall(cell.getValueCells().get(i), cell.getOnFalseList().get(i), 2);
-//    }
-//    program.add(getIndent(1) + "}");
-//  }
-  
- 
+  private String createJavaLine(CallCell cell, final String call, final String op) {
+    final boolean isFillInCode = op.indexOf("${") >= 0;
+    String operation = null;
+    if (isFillInCode) {
+      operation = pasteCellNamesInPlaces(op, cell.getParams());
+    } else {
+      operation = joinParams(cell.getParams(), " " + op + " ");
+      if (cell.getParams().length == 1)// solve single param operator:postfix
+        operation += op;
+    }
+    return operation + ";";
+  }
+
+  private static String pasteCellNamesInPlaces(final String text, final ValueCell[] params) {
+    final int start = text.indexOf("${");
+    // is tag found?
+    String result = text;
+    if (start >= 0) {
+      final int end = text.indexOf("}", start);
+      if (end < 0)
+        throw new IllegalArgumentException("after opening tag '${' no closing tag '}' found in: " + text);
+      final String tag = text.substring(start + 2, end);
+      final String replacement = params[Integer.parseInt(tag)].getName();
+      // replace tag
+      final String textNew = text.substring(0, start) + replacement + text.substring(end + 1);
+      // find next tag recursive...
+      result = pasteCellNamesInPlaces(textNew, params);
+    }
+    return result;
+  }
+
   private String joinParams(ValueCell[] cells, String seperator) {
     String[] names = new String[cells.length];
     for (int i = 0; i < names.length; i++) {

@@ -38,9 +38,9 @@ import nl.bluevoid.genpro.cell.ValueCell;
 import nl.bluevoid.genpro.cell.switx.BooleanSwitchCell;
 import nl.bluevoid.genpro.cell.switx.NumberSwitchCell;
 import nl.bluevoid.genpro.cell.switx.SwitchCell;
-import nl.bluevoid.genpro.util.Calc;
 import nl.bluevoid.genpro.util.Sneak;
 import nl.bluevoid.genpro.util.XMLBuilder;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -69,10 +69,9 @@ public class Grid implements Cloneable, Comparable<Grid> {
   public Thread calculatedBy;
 
   public double[] oldCalcResults;
-
   public double[] calcResults;
 
-  // public boolean leadsToInputValidated=false
+  private ArrayList<String> history = new ArrayList<String>();
 
   private ArrayList<GridExecutionError> errors = new ArrayList<GridExecutionError>();
 
@@ -108,7 +107,7 @@ public class Grid implements Cloneable, Comparable<Grid> {
     libraryCells = libraryCells2;
   }
 
-  public void calc() {
+  public void calc() throws GridExecutionError {
     // list calcCells & call calculate
     try {
       for (final Calculable cell : callCells) {
@@ -118,6 +117,7 @@ public class Grid implements Cloneable, Comparable<Grid> {
           }
         } catch (final GridExecutionError e) {
           errors.add(e);
+          throw e;
         }
       }
     } catch (final RuntimeException e) {
@@ -134,11 +134,11 @@ public class Grid implements Cloneable, Comparable<Grid> {
   /**
    * 
    * @param grid
+   * @param generationNr
    * @return an Array of Grids, where some might be null! This happens when crossing fails to give a working
    *         result
    */
-  public synchronized Grid[] cross(final Grid grid) {
-
+  public synchronized Grid[] cross(final Grid grid, int generationNr) {
     Grid g1 = grid.clone();
     Grid g2 = this.clone();
 
@@ -159,57 +159,57 @@ public class Grid implements Cloneable, Comparable<Grid> {
     child2.addAll(gCells2.subList(0, cut));
     child2.addAll(gCells1.subList(cut, gCells1.size()));
 
+    g1 = g1.tryToSet(child);
+    g2 = g2.tryToSet(child2);
+
+    return new Grid[] { g2, g1 };
+  }
+
+  /**
+   * 
+   * @param g1
+   * @param child
+   * @return null on error!! or this on succes!
+   */
+  private Grid tryToSet(final ArrayList<Cell> child) {
     try {
-      g1.setCrossedCells(child);
+      // divide cells: constants, callcells, outputcells
+      final ArrayList<ConstantCell> constant = new ArrayList<ConstantCell>();
+      final ArrayList<Calculable> call = new ArrayList<Calculable>();
+      final ArrayList<ReferenceCell> output = new ArrayList<ReferenceCell>();
+
+      for (final Cell valueCell : child) {
+        switch (valueCell.getCellType()) {
+        case ConstantCell:
+          constant.add((ConstantCell) valueCell);
+          break;
+        case ReferenceCell:
+          output.add((ReferenceCell) valueCell);
+          break;
+        case CallCell:
+        case NumberSwitchCell:
+        case BooleanSwitchCell:
+          call.add((Calculable) valueCell);
+          break;
+        default:
+          throw new IllegalArgumentException(" invalid celltype: " + valueCell);
+        }
+      }
+      constantCells = constant.toArray(new ConstantCell[constant.size()]);
+      callCells = call.toArray(new Calculable[call.size()]);
+      setOutPutCells(output.toArray(new ReferenceCell[output.size()]));
+      restoreConnections();
+      history.clear();
+      recalcAndFixConnectivity();
     } catch (UnconnectableGridException t) {
-      g1 = null;
+      return null;
     } catch (NoCellFoundException e) {
       for (Cell cell : child) {
         e.addInfo("" + cell.getCellType() + " " + cell.getName() + " " + ((ValueCell) cell).getValueType());
       }
-
-      Sneak.sneakyThrow(e);
+      return null;
     }
-    try {
-      g2.setCrossedCells(child2);
-    } catch (UnconnectableGridException t) {
-      g2 = null;
-    } catch (NoCellFoundException e) {
-      for (Cell cell : child2) {
-        e.addInfo("" + cell.getCellType() + " " + cell.getName() + " " + ((ValueCell) cell).getValueType());
-      }
-      Sneak.sneakyThrow(e);
-    }
-    return new Grid[] { g2, g1 };
-  }
-
-  private void setCrossedCells(final ArrayList<Cell> child) throws NoCellFoundException {
-    // divide cells: constants, callcells, outputcells
-    final ArrayList<ConstantCell> constant = new ArrayList<ConstantCell>();
-    final ArrayList<Calculable> call = new ArrayList<Calculable>();
-    final ArrayList<ReferenceCell> output = new ArrayList<ReferenceCell>();
-
-    for (final Cell valueCell : child) {
-      switch (valueCell.getCellType()) {
-      case ConstantCell:
-        constant.add((ConstantCell) valueCell);
-        break;
-      case ReferenceCell:
-        output.add((ReferenceCell) valueCell);
-        break;
-      case CallCell:
-      case NumberSwitchCell:
-      case BooleanSwitchCell:
-        call.add((Calculable) valueCell);
-        break;
-      default:
-        throw new IllegalArgumentException(" invalid celltype: " + valueCell);
-      }
-    }
-    constantCells = constant.toArray(new ConstantCell[constant.size()]);
-    callCells = call.toArray(new Calculable[call.size()]);
-    setOutPutCells(output.toArray(new ReferenceCell[output.size()]));
-    restoreConnections();
+    return this;
   }
 
   private ArrayList<Cell> getCellsForCrossing() {
@@ -246,35 +246,41 @@ public class Grid implements Cloneable, Comparable<Grid> {
     }
   }
 
-  public void mutateIfNeeded() {
-    if (Calc.getRandomBoolean(setup.getMutatePercentage())) {
-      mutate();
-    }
-  }
-
-  public void mutate() {
+  public void mutate(final String historyPrefix) throws NoCellFoundException {
     final int num = constantCells.length + callCells.length;
 
     if (num == 0)
       return;
     final int choice = random.nextInt(num);
     if (choice < constantCells.length) {
+      // mutate constant
       if (constantCells[choice].canMutate()) {// TODO make this not select-able
         constantCells[choice].mutate();
         mutatedConstants++;
+        if (setup.isGridHistoryTrackingOn()) {
+          addToHistory(historyPrefix + "mutated constant " + constantCells[choice].getName());
+        }
       }
+      // TODO this is absolutely weird but needed to keep good solutions, why? doe sthe clone of bestsolution
+      // need a fix??
+      recalcAndFixConnectivity();
     } else {
+      // mutate callcell
       final int place2 = choice - constantCells.length;
       // gather all options
       final ArrayList<ValueCell> paramCells = getParamsTillCallcell(place2);
       final HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType = getCallTargetsTillCallCell(place2);
 
       callCells[place2].mutate(callTargetsByReturnType, paramCells);
+      if (setup.isGridHistoryTrackingOn()) {
+        addToHistory(historyPrefix + "mutated callcell " + callCells[place2].getName());
+      }
+      recalcAndFixConnectivity();
     }
-    
-    //TODO: delete Cell
-    //TODO: add Cell
-    //TODO: mutate output to point at different cell 
+
+    // TODO: delete Cell
+    // TODO: add Cell
+    // TODO: mutate output to point at different cell
   }
 
   public Collection<Cell> getUsedCells() {
@@ -316,7 +322,6 @@ public class Grid implements Cloneable, Comparable<Grid> {
   private HashMap<Class<?>, ArrayList<CallTarget>> getCallTargetsTillCallCell(final int place) {
     final HashMap<Class<?>, ArrayList<CallTarget>> callTargetsByReturnType = new HashMap<Class<?>, ArrayList<CallTarget>>();
     Util.addCallTargets(libraryCells, callTargetsByReturnType);
-    Util.addCallTargets(inputCells, callTargetsByReturnType);
     for (int i = 0; i < place; i++) {
       Util.addCallTarget(callCells[i], callTargetsByReturnType);
     }
@@ -349,8 +354,8 @@ public class Grid implements Cloneable, Comparable<Grid> {
         recalcIsUsedForOutput();
         success = true;
       } catch (NoCellFoundException e) {
-        if (++tries > 30) {
-          throw new IllegalStateException("No succesfull solution within 30 tries!!??", e);
+        if (++tries > 80) {
+          throw new IllegalStateException("No succesfull solution within 80 tries!!??", e);
         }
       }
   }
@@ -378,7 +383,6 @@ public class Grid implements Cloneable, Comparable<Grid> {
       }
     }
     Util.addCells(inputCells, paramCells);
-    Util.addCallTargets(inputCells, callTargetsByReturnType);
 
     // create new constants with different value
     for (int i = 0; i < constantCells.length; i++) {
@@ -439,24 +443,29 @@ public class Grid implements Cloneable, Comparable<Grid> {
     }
     // connect outputcells, we only connect to callcells, so expect 1 callcell at least!!
     for (ReferenceCell output : outputs_local) {
-      int tries = 0;
-      while (true) {
-        // we search for a cell that connects to an input otherwise it will be a dead grid
-        // CallCell cell = (CallCell) Util.getRandomCellFromCalculables(output.getValueType(), callCells);
-        ValueCell cell = Util.getRandomCellFromCalculables(output.getValueType(), callCells);
-        // ValueCell cell = (CallCell) Util.getRandomCell(output.getValueType(), paramCells);
-        if (cell.isLeadsToInputCell()) {
-          output.setReferedCell(cell);
-          break;
-        }
-        tries++;
-        if (tries > callCells.length * 2) {
-          // failed after many tries, give up
-          throw new NoCellFoundException("cannot find a valid connection that leads to an input");
-        }
-      }
+      connectOutput(output);
     }
     setOutPutCells(outputs_local);
+  }
+
+  private void connectOutput(ReferenceCell output) throws NoCellFoundException {
+    int tries = 0;
+    final int maxTries = callCells.length * 2;
+    while (true) {
+      // we search for a cell that connects to an input otherwise it will be a dead grid
+      ValueCell cell = Util.getRandomCellFromCalculables(output.getValueType(), callCells, true);
+
+      if (cell.isLeadsToInputCell()) {
+        output.setReferedCell(cell);
+        break;
+      }
+      tries++;
+      if (tries > maxTries) {
+        // failed after many tries, give up
+        throw new NoCellFoundException("cannot find a valid connection that leads to an input:"
+            + Util.toStringCells(callCells));
+      }
+    }
   }
 
   private SwitchCell getSwitchCell(String name) {
@@ -480,18 +489,14 @@ public class Grid implements Cloneable, Comparable<Grid> {
   }
 
   public void printSolution() {
-    System.out.println("inputCells");
-    Util.printCells(inputCells);
-    System.out.println("libraryCells");
-    Util.printCells(libraryCells);
-    System.out.println("constantCells");
-    Util.printCells(constantCells);
-    System.out.println("gridCells");
-    Util.printCells(callCells);
-    System.out.println("outputCells");
-    Util.printCells(outputCells);
+    System.out.println("inputCells\n" + Util.toStringCells(inputCells));
+    System.out.println("libraryCells\n" + Util.toStringCells(libraryCells));
+    System.out.println("constantCells\n" + Util.toStringCells(constantCells));
+    System.out.println("gridCells\n" + Util.toStringCells(callCells));
+    System.out.println("outputCells\n" + Util.toStringCells(outputCells));
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Grid clone() {
     try {
@@ -503,6 +508,7 @@ public class Grid implements Cloneable, Comparable<Grid> {
       clone.outputCells = (ReferenceCell[]) Util.clone(outputCells);
       clone.inOutCellsMap = new HashMap<String, ValueCell>();
       clone.errors = new ArrayList<GridExecutionError>();
+      clone.history = (ArrayList<String>) history.clone();
       clone.score = -1;
 
       for (final ValueCell cell : clone.outputCells) {
@@ -621,9 +627,26 @@ public class Grid implements Cloneable, Comparable<Grid> {
     return x.toString();
   }
 
+  private void recalcAndFixConnectivity() throws NoCellFoundException {
+    recalcIsLeadsToInputCell();
+    for (ReferenceCell output : outputCells) {
+      if (!output.getReferedCell().isLeadsToInputCell()) {
+        // not leading to input: reconnect!
+        connectOutput(output);
+      }
+    }
+    recalcIsUsedForOutput();
+  }
+
   public void recalcIsUsedForOutput() {
     for (ReferenceCell c : outputCells) {
       c.setCascadeUsedForOutput();
+    }
+  }
+
+  private void recalcIsLeadsToInputCell() {
+    for (Calculable cell : callCells) {
+      cell.validateLeadsToInputCell();
     }
   }
 
@@ -641,5 +664,13 @@ public class Grid implements Cloneable, Comparable<Grid> {
     for (Calculable cc : callCells) {
       cc.resetCallAndErrorCounter();
     }
+  }
+
+  public ArrayList<String> getHistory() {
+    return history;
+  }
+
+  public void addToHistory(String historyString) {
+    history.add(System.currentTimeMillis() + " : " + historyString);
   }
 }

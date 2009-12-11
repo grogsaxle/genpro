@@ -16,10 +16,10 @@
 
 package nl.bluevoid.genpro.cell.test;
 
-import nl.bluevoid.genpro.cell.ConstantCell;
-import nl.bluevoid.genpro.util.Debug;
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import nl.bluevoid.genpro.cell.ConstantCell;
+import nl.bluevoid.genpro.util.Debug;
 /**
  * @author Rob van der Veer
  * @since 1.0

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import nl.bluevoid.genpro.CallTarget;
 import nl.bluevoid.genpro.Util;
 import nl.bluevoid.genpro.cell.CellTypeEnum;
+import nl.bluevoid.genpro.cell.NoCellFoundException;
 import nl.bluevoid.genpro.cell.ValueCell;
 import nl.bluevoid.genpro.util.Debug;
 
@@ -66,7 +67,11 @@ public class NumberSwitchCell extends SwitchCell {
       if (options.size() <= maxOptions) {
         SwitchOption option = createAndAddOption();
         setOptionValue(option);
-        option.connectCell(callTargetsByReturnType, allParamCells);
+        try {
+          option.connectCell(callTargetsByReturnType, allParamCells);
+        } catch (NoCellFoundException e) {
+          Debug.printErrln("Mutation failed "+e.getMessage());
+        }
         optionsSorted = false;
         mutations.add("added option");
       }

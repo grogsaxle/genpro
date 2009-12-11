@@ -20,11 +20,11 @@ import junit.framework.TestCase;
 import nl.bluevoid.genpro.Grid;
 import nl.bluevoid.genpro.JavaGenerator;
 import nl.bluevoid.genpro.Setup;
-import nl.bluevoid.genpro.TestSet;
 import nl.bluevoid.genpro.cell.CallCell;
 import nl.bluevoid.genpro.cell.ConstantCell;
-import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.NumberOperations;
+import nl.bluevoid.genpro.util.StringUtil;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -32,75 +32,67 @@ import nl.bluevoid.genpro.operations.NumberOperations;
 public class GridTest extends TestCase {
 
   private Grid grid;
-  private TestSet testSet;
 
   @Override
   protected void setUp() throws Exception {
-    Setup setup=new Setup("GridTest");
+    Setup setup = new Setup("GridTest");
     setup.addInputCell("fahrenheit", Double.class);
     setup.addOutputCell("celcius", Double.class);
-    setup.setCallCells(6, "c",  Double.class );
-   
+    setup.setCallCells(6, "c", Double.class);
+
     ConstantCell cCell = new ConstantCell("const1", Double.class, -100, 100);
     ConstantCell cCell2 = new ConstantCell("const2", Double.class, -100, 100);
     ConstantCell cCell3 = new ConstantCell("const3", Double.class, -100, 100);
-    setup.setConstantCells( cCell, cCell2, cCell3 );
+    setup.setConstantCells(cCell, cCell2, cCell3);
 
-    
-    setup.setLibraryCells( NumberOperations.NUM_OPS);// , NumberOperations.MATH_CLASS);
-    
+    setup.setLibraryCells(NumberOperations.NUM_OPS);// , NumberOperations.MATH_CLASS);
+
     grid = setup.generateSolution();
-    
+
     // System.out.println("start grid");
     // grid.printSolution();
-
-    testSet = new TestSet(setup, new String[] { "fahrenheit", "celcius" }) {
-      public double scoreOutput(ReferenceCell cell, Object calculated, Object expected) {
-        return getAbsoluteNumberDifference((Number)calculated, (Number)expected);
-      }
-
-      @Override
-      public double scoreGrid(Grid g) {
-        return 0;
-      }
-    };
-    // testSet.addCellValues(new Double[] { 0.0, -17.77777777777778 });
-    // testSet.addCellValues(new Double[] { 32d, 0.0 });
-    testSet.addCellValues( 33.8, 1d );
-    testSet.addCellValues( 39.2d, 4d );
-    testSet.addCellValues(64.4d, 18d );
-    testSet.addCellValues( 71.6d, 22d );
-    testSet.addCellValues( 98.60000000000001d, 37d );
-    testSet.addCellValues( 113d, 45d );
-    testSet.addCellValues( 212d, 100d );
-    testSet.addCellValues( 392d, 200d );
-    testSet.addCellValues( 752d, 400d );
   }
 
   public void testClone() {
     grid.createSolution();
-    JavaGenerator.printJavaProgram(grid, "to clone","nl.bluevoid.gp", true);
+    grid.addToHistory("history");
+    JavaGenerator.printJavaProgram(grid, "to clone", "nl.bluevoid.gp", true);
     grid.setScore(300);
     Grid clone = grid.clone();
-    JavaGenerator.printJavaProgram(clone, "cloned","nl.bluevoid.gp", true);
+    JavaGenerator.printJavaProgram(clone, "cloned", "nl.bluevoid.gp", true);
     assertNotSame(clone.getConstantCells(), grid.getConstantCells());
     assertNotSame(clone.getCallCells(), grid.getCallCells());
     assertNotSame(clone.getInputCells(), grid.getInputCells());
     assertNotSame(clone.getOutputCells(), grid.getOutputCells());
     assertNotSame(clone.getLibraryCells(), grid.getLibraryCells());
-    assertNotSame(clone.getOutputCell("celcius"),grid.getOutputCell("celcius") );
-    assertNotSame(clone.getOutputCell("celcius").getReferedCell(),grid.getOutputCell("celcius").getReferedCell() );
+    assertNotSame(clone.getOutputCell("celcius"), grid.getOutputCell("celcius"));
+    assertNotSame(clone.getOutputCell("celcius").getReferedCell(), grid.getOutputCell("celcius")
+        .getReferedCell());
+    // check history
+    assertNotSame(clone.getHistory(), grid.getHistory());
+    clone.addToHistory("clone");
+    grid.addToHistory("grid");
+
+    String[] cloneHist = clone.getHistory().toArray(new String[0]);
+    String[] gridHist = grid.getHistory().toArray(new String[0]);
+    System.out.println("clone hist=\n" + StringUtil.join("\n", cloneHist));
+    System.out.println("grid hist=\n" + StringUtil.join("\n", gridHist));
+
+    assertEquals(cloneHist[0], gridHist[0]);
+    assertNotSame(cloneHist[1], gridHist[1]);
+
     
-    assertNotSame(clone.getInputCell("fahrenheit"),grid.getInputCell("fahrenheit") );
-    assertNotSame(((CallCell)clone.getCallCells()[0]).getParams()[0], ((CallCell)grid.getCallCells()[0]).getParams()[0]);
-    
-    //clone.getInputCell("fahrenheit").setValue(40.0);
-    //System.out.println("fahrenheit:"+grid.getInputCell("fahrenheit").getValue());
-    
-    //score must be reset
-    assertTrue(clone.getScore()==-1);
-    //setup must stay the same
-    assertTrue(clone.getSetup()==grid.getSetup());
+    assertNotSame(clone.getInputCell("fahrenheit"), grid.getInputCell("fahrenheit"));
+    assertNotSame(((CallCell) clone.getCallCells()[0]).getParams()[0], ((CallCell) grid.getCallCells()[0])
+        .getParams()[0]);
+
+    // clone.getInputCell("fahrenheit").setValue(40.0);
+    // System.out.println("fahrenheit:"+grid.getInputCell("fahrenheit").getValue());
+
+    // score must be reset
+    assertTrue(clone.getScore() == -1);
+    // setup must stay the same
+    assertTrue(clone.getSetup() == grid.getSetup());
   }
 
   public void assertNotSame(Object[] a, Object[] b) {
@@ -109,10 +101,10 @@ public class GridTest extends TestCase {
       super.assertNotSame(a[i], b[i]);
     }
   }
-  
-  public void testXML(){
+
+  public void testXML() {
     grid.createSolution();
-    String xml=grid.getXML();
+    String xml = grid.getXML();
     System.out.println(xml);
   }
 }

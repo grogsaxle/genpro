@@ -20,10 +20,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import junit.framework.TestCase;
 import nl.bluevoid.genpro.NoCallTarget;
 import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.operations.NumberOperations;
-import junit.framework.TestCase;
 /**
  * @author Rob van der Veer
  * @since 1.0

@@ -16,9 +16,9 @@
 
 package nl.bluevoid.genpro.test;
 
+import junit.framework.TestCase;
 import nl.bluevoid.genpro.Util;
 import nl.bluevoid.genpro.util.Debug;
-import junit.framework.TestCase;
 /**
  * @author Rob van der Veer
  * @since 1.0

@@ -19,6 +19,7 @@ package nl.bluevoid.genpro.util;
 import java.util.Random;
 
 import junit.framework.Assert;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -35,14 +36,6 @@ public final class Calc {
     // add 1 cause in nextInt(n) n is exclusive,
     return random.nextInt(max - min + 1) + min;
   }
-  /**
-   * 
-   * @param chancePercentage the percentage of the boolean hitting true
-   * @return
-   */
-  public static final boolean getRandomBoolean(int chancePercentage){
-    return getRandomInt(0, 100)<=chancePercentage;
-  }
 
   public static final double getRandomDouble(final double min, final double max) {
     Debug.checkParam(min > max, "min>max");
@@ -50,18 +43,19 @@ public final class Calc {
     return range * random.nextDouble() + min;
   }
 
-  public static boolean isNaNorInfinite(double d){
-    if(Double.isInfinite(d)) return true;
+  public static boolean isNaNorInfinite(double d) {
+    if (Double.isInfinite(d))
+      return true;
     return Double.isNaN(d);
   }
-  
+
   /**
    * @param min
    * @param max
    * @param pow
-   *            value between 2 and 9 where 2 returns values according to a line of 45 degrees (x=y) and 9
-   *            gives a very strong curved hyperbolic line with very high chance of getting min value and
-   *            almost no chance of getting the max value.
+   *          value between 2 and 9 where 2 returns values according to a line of 45 degrees (x=y) and 9 gives
+   *          a very strong curved hyperbolic line with very high chance of getting min value and almost no
+   *          chance of getting the max value.
    * @return
    */
 
@@ -109,7 +103,7 @@ public final class Calc {
    * Truncate a float to a two-decimal float, as used fro currency.
    * 
    * @param f
-   *            The float to truncate.
+   *          The float to truncate.
    * @return The truncated float.
    */
   public static float trunc2Decimals(final float f) {
@@ -117,19 +111,55 @@ public final class Calc {
   }
 
   public static float truncDecimals(final float f, int decimals) {
-    int multiplier = (int)Math.pow(10, decimals);
+    int multiplier = (int) Math.pow(10, decimals);
     return ((int) (f * multiplier)) / (float) multiplier;
   }
-  
+
   public static double truncDecimals(final double f, int decimals) {
-    int multiplier = (int)Math.pow(10, decimals);
+    int multiplier = (int) Math.pow(10, decimals);
     return ((int) (f * multiplier)) / (double) multiplier;
   }
-  
+
   public static void main(String[] args) {
     Assert.assertEquals(truncDecimals(3.141595, 2), 3.14, 0.0001);
     Assert.assertEquals(truncDecimals(3.141595, 3), 3.141, 0.0001);
     Assert.assertEquals(truncDecimals(3.141595, 0), 3, 0.0001);
     Assert.assertEquals(truncDecimals(3.141595, 1), 3.1, 0.0001);
+    test(0);
+    for (int i = 0; i < 10000; i++) {
+      int r = random.nextInt();
+      test(r);
+    }
+
+    test(10);
+    test(-10);
+
+  }
+
+  private static void test(int r) {
+    double val = intRangeTo0_1(r);
+    Debug.checkRange(val, 0, 1, "val");
+    System.out.println("R=" + r + " val=" + val);
+  }
+
+  final static double MAX = signedLog(Integer.MAX_VALUE);
+  final static double MIN = signedLog(Integer.MIN_VALUE + 1);
+  final static double RANGE = MAX - MIN;
+
+  final static double INTRANGE = Integer.MAX_VALUE - Integer.MIN_VALUE;
+
+  public static double intRangeTo0_1(double val){
+    return (val- Integer.MIN_VALUE) / INTRANGE;
+  }
+  
+  public static double toLogRange(final int min, final int range, final int value) {
+    final double log = value == 0 ? 0 : signedLog(value);
+    // to 0-1
+    final double pos = (log - MIN) / RANGE;
+    return pos * range + min;
+  }
+
+  public static double signedLog(int value) {
+    return Math.signum(value) * Math.log(Math.abs(value));
   }
 }

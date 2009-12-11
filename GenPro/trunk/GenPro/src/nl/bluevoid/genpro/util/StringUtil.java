@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-/** 
+
+/**
  * @author Rob van der Veer
  * @since 1.0
  */
@@ -104,7 +105,7 @@ public class StringUtil {
       return fieldName;
     return fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
   }
-  
+
   public static String decapitalize(String fieldName) {
     if (fieldName.length() == 0)
       return fieldName;
@@ -289,6 +290,11 @@ public class StringUtil {
     // 0000=4a7d1ed414474e4033ac29ccb8653d9b
     // 2222=6cb4aca7ff4e34570695a28d08d0e9ef or
     // 934b535800b1cba8f96a5d72f72f1611
+    String v=getRandomString(6);
+    for (int i = 0; i < 300; i++) {
+      System.out.println(v);
+      v=mutateString(v, 6);
+    }
   }
 
   public static final String letters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -327,7 +333,6 @@ public class StringUtil {
     return result;
   }
 
-
   public static byte[] toBytes(String hashString) {
     byte[] targetHash = new byte[hashString.length() / 2];
     for (int i = 0; i < targetHash.length; i++) {
@@ -350,5 +355,44 @@ public class StringUtil {
       return text.substring(0, start) + newString + text.substring(start + zoek.length());
     } else
       return text;
+  }
+
+  public static String getRandomString(int length) {
+    StringBuilder b = new StringBuilder();
+    for (int i = 0; i < length; i++) {
+      b.append(getRandomLetter());
+    }
+    return b.toString();
+  }
+
+  public static char getRandomLetter() {
+    return letters.charAt(r.nextInt(letters.length()));
+  }
+
+  public static String mutateString(String value, int maxLength) {
+    switch (r.nextInt(3)) {
+    // add letter
+    case 0:
+      //System.out.println("add");
+      if (value.length() < maxLength) {
+        int cut = r.nextInt(value.length());
+        return value.substring(0,cut) + getRandomLetter() + value.substring(cut, value.length());
+      }
+    case 1:
+      //System.out.println("delete");
+      if (value.length() > 1) {
+        int cut = r.nextInt(value.length() - 1);
+        return value.substring(0, cut) + value.substring(cut + 1, value.length());
+      }
+      // delete letter
+    case 2:
+     // System.out.println("change");
+      char[] chars = value.toCharArray();
+      chars[r.nextInt(chars.length)] = getRandomLetter();
+      return new String(chars);
+      // change letter
+    default:
+      throw new IllegalStateException("wrong case");
+    }
   }
 }

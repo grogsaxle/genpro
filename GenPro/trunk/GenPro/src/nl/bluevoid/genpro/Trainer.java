@@ -23,59 +23,71 @@ import java.util.ArrayList;
 import nl.bluevoid.genpro.util.Debug;
 import nl.bluevoid.genpro.util.FileUtil;
 import nl.bluevoid.genpro.util.Sneak;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
  */
 public abstract class Trainer implements ResultListener {
 
-  protected final TestSet testSet;
+  //protected final TestSet testSet;
   protected final Setup setup;
   protected GenerationRunner generationRunner;
 
-  ArrayList<ResultListener> listeners = new ArrayList<ResultListener>();
+  protected ArrayList<ResultListener> listeners = new ArrayList<ResultListener>();
+  protected TestSetSolutionEvaluator evaluator;
 
   public Trainer() {
     setup = createSetup();
-    testSet = createTestSet();
+    evaluator = createEvaluator();
     addResultListener(this);
   }
 
   public abstract Setup createSetup();
 
-  public abstract TestSet createTestSet();
+  public abstract TestSetSolutionEvaluator createEvaluator();
 
   public void startTraining() {
-    generationRunner = new GenerationRunner(setup, testSet);
+    setup.setName(getClass().getSimpleName());
+    generationRunner = new GenerationRunner(setup, evaluator);
     for (ResultListener list : listeners) {
       generationRunner.addResultListener(list);
     }
     generationRunner.runGenerations();
   }
 
-  public void addResultListener(ResultListener listener) {
-    listeners.add(listener);
+  public void stopTraining() {
+    generationRunner.stopRunning();
   }
 
-  public TestSet getTestSet() {
-    return testSet;
+  public void addResultListener(ResultListener listener) {
+    listeners.add(listener);
   }
 
   public Setup getSetup() {
     return setup;
   }
 
-  //@Override  //from interface, does only work in 1.6 and up
+  // @Override //from interface, does only work in 1.6 and up
   public void newBestResult(Grid bestSolution) {
     printAndStoreToFile(bestSolution, false);
     printBestSolution(bestSolution);
   }
 
+  public void newStats(int generationnr, long millisPerGeneration) {
+    // do nothing
+  }
+
+  public void startUpProgress(int createdIndividuals) {
+    // do nothing
+  }
+
   protected void printBestSolution(Grid bestSolution) {
     String result = getResultsAsString(bestSolution);
     System.out.println(result);
-    JavaMethodGenerator.printJavaProgram(bestSolution, setup.getName(), "nl.bluevoid.gp", setup
-        .getSolutionInterface(), "best_" + bestSolution.getScore(), false);
+    System.out.println(JavaMethodGenerator.getJavaProgram(bestSolution, setup.getName(), "nl.bluevoid.gp",
+        setup.getSolutionInterface(), "best_" + bestSolution.getScore(), setup.isDebugInfoVisible(), setup
+            .isJunkDnaShown()));
   }
 
   public String getResultsAsString(Grid bestSolution) {
@@ -83,10 +95,10 @@ public abstract class Trainer implements ResultListener {
   }
 
   public TestSetStatistics getStatistics(Grid bestSolution) {
-    return testSet.getDeviations(bestSolution);
+    return evaluator.getDeviations(bestSolution);
   }
-  
-  protected void printAndStoreToFile(Grid grid, boolean alsoStripped) {
+
+  public void printAndStoreToFile(Grid grid, boolean alsoStripped) {
     // do we need to store?
     if (grid.getScore() > setup.getMinimumScoreForSaving())
       return;
@@ -106,7 +118,8 @@ public abstract class Trainer implements ResultListener {
     stripped.setScore(grid.getScore());
 
     String javaStripped = JavaMethodGenerator.getJavaProgram(stripped, setup.getName(), "nl.bluevoid.gp",
-        setup.getSolutionInterface(), "best_stripped " + stripped.getScore(), false);
+        setup.getSolutionInterface(), "best_stripped " + stripped.getScore(), setup.isDebugInfoVisible(),
+        setup.isJunkDnaShown());
     buffer.append(javaStripped);
     buffer.append("\n-->\n\n");
 
@@ -114,7 +127,7 @@ public abstract class Trainer implements ResultListener {
     String data = buffer.toString();
 
     System.out.println(data);
-    String dir = setup.getName() + testSet.getScoringType();
+    String dir = setup.getName() + evaluator.getScoringType();
     File dirs = new File(dir);
     File f = new File(dir + "/" + setup.getName() + "_" + grid.getScore() + ".xml");
     Debug.println("Storing solution in " + f.getAbsolutePath());
@@ -130,9 +143,10 @@ public abstract class Trainer implements ResultListener {
     }
   }
 
-  protected String getJava(Grid grid) {
-    String java = JavaMethodGenerator.getJavaProgram(grid, setup.getName(), "nl.bluevoid.gp", setup
-        .getSolutionInterface(), "best " + grid.getScore(), false);
+  public String getJava(Grid grid) {
+    String java = JavaMethodGenerator.getJavaProgram(grid, setup.getName(), "nl.bluevoid.genpro", setup
+        .getSolutionInterface(), "best " + grid.getScore(), setup.isDebugInfoVisible(), setup
+        .isJunkDnaShown());
     return java;
   }
 }

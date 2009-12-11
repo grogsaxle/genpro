@@ -17,8 +17,6 @@
 package nl.bluevoid.genpro.util;
 
 import java.util.ArrayList;
-
-import nl.bluevoid.genpro.util.StringUtil;
 /**
  * Exception that allows extra info to be stored in it, handy for debugging
  * 

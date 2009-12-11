@@ -33,6 +33,7 @@ public class BooleanOperations {
   public static boolean greaterThanOrEquals(int a, int b) {
     return a >= b;
   }
+  
   public static boolean smallerThan(int a, int b) {
     return a < b;
   }
@@ -68,14 +69,6 @@ public class BooleanOperations {
   public static boolean not(boolean a) {
     return !a;
   }
-
-  public static boolean setTrue() {
-    return true;
-  }
-  
-  public static boolean setFalse() {
-    return false;
-  }
   
   @NoCallTarget
   public static String getJavaSyntax(String methodName) {
@@ -105,12 +98,6 @@ public class BooleanOperations {
     }
     if("not".equals(methodName)){
       return "!";
-    }
-    if("setTrue".equals(methodName)){
-      return "true";
-    }
-    if("setFalse".equals(methodName)){
-      return "false";
     }
     throw new IllegalArgumentException("No javaSyntax for:"+methodName);
   }

@@ -17,34 +17,33 @@
 package nl.bluevoid.genpro;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import nl.bluevoid.genpro.cell.ReferenceCell;
-import nl.bluevoid.genpro.util.Calc;
 import nl.bluevoid.genpro.util.Debug;
 import nl.bluevoid.genpro.util.FileUtil;
 import nl.bluevoid.genpro.util.Sneak;
 import nl.bluevoid.genpro.util.StringUtil;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
  */
-public abstract class TestSet implements Cloneable {
+public class TestSet implements Cloneable {
 
-  public static final String SKIP_DATA_COLUMN = "SKIP_DATA_COLUMN";
+  public static final String SKIP_COLUMN = "SKIP_DATA_COLUMN";
 
   private String[] cellNames;
   private String[] inputCellNames;
-
-  public String[] getInputCellNames() {
-    return inputCellNames;
-  }
-
-  public String[] getOutputCellNames() {
-    return outputCellNames;
-  }
 
   private String[] outputCellNames;
 
@@ -52,18 +51,15 @@ public abstract class TestSet implements Cloneable {
 
   private int numValues = 0;
   private final Setup setup;
-  private static final int letterWrongpenalty = 1;
 
-  private int evalTillTestSetNr = -1;
-  private ScoringType scoringType = ScoringType.SCORING_AVARAGE_PER_TESTCASE;
+  public static final int MYSQLDUMP = 234;
 
-  public boolean increaseIncrementalInvolvement() {
-    if (evalTillTestSetNr >= numValues) {
-      return false;
-    } else {
-      evalTillTestSetNr++;
-      return true;
-    }
+  public String[] getInputCellNames() {
+    return inputCellNames;
+  }
+
+  public String[] getOutputCellNames() {
+    return outputCellNames;
   }
 
   public TestSet(Setup setup, String... cellNames) {
@@ -97,10 +93,9 @@ public abstract class TestSet implements Cloneable {
       arr.add(objects[i]);
     }
     numValues++;
-    evalTillTestSetNr = numValues;
   }
-  
-  public ArrayList<Object> getCellValues(String name){
+
+  public ArrayList<Object> getCellValues(String name) {
     return values.get(name);
   }
 
@@ -112,132 +107,14 @@ public abstract class TestSet implements Cloneable {
     for (int i = 0; i < columns.length; i++) {
       // final Class<?> cellType = setup.getInOrOutPutCellType(cellNames[i]);
       ArrayList<Object> arr = values.get(columns[i]);
+      if (arr == null)
+        throw new IllegalArgumentException("Unknown cellname:" + columns[i]);
       arr.add(objects[i]);
     }
     numValues++;
-    evalTillTestSetNr = numValues;
   }
 
-  public TestSetStatistics getDeviations(final Grid grid) {
-    TestSetStatistics tss = new TestSetStatistics(this, grid);
-    grid.resetGridExecutionErrors();
-    grid.resetCellCallCounters();
-
-    for (int valueNr = 0; valueNr < numValues; valueNr++) {
-      // set inputs
-      for (final String name : inputCellNames) {
-        grid.getInputCell(name).setValue(getValue(name, valueNr));
-      }
-      grid.calc();
-
-      // read outputs && store values in "ACTUAL"
-      for (final String name : outputCellNames) {
-        final ReferenceCell ocell = grid.getOutputCell(name);
-        tss.setActualOutputValue(name, valueNr, ocell.getValue());
-      }
-
-    }
-    return tss;
-  }
-
-  public double evaluate(final Grid grid) {
-    // System.out.println("Evaluating:"+grid.toString());
-    grid.resetGridExecutionErrors();
-    double score = 0;
-
-    for (int valueNr = 0; valueNr < evalTillTestSetNr; valueNr++) {
-      // set inputs
-      for (final String name : inputCellNames) {
-        grid.getInputCell(name).setValue(getValue(name, valueNr));
-        // Debug.println("input "+name+" set to:"+grid.getInputCell(name));
-      }
-
-      // TODO why do we need this????
-      // het zorgt ervoor dat calc maar op 1 thread tegelijk wordt aangeroepen
-      // als calc wordt uitgevoerd samen met een andere thread die iets in evaluate doet, dan gaat het mis.
-      // Wat wordt er dan in calc gedeeld met andere grids???
-      // niet inputs en outputs
-      // wel static library objecten
-      // niet constanten
-
-      // synchronized (this) {
-      // do calc
-
-      grid.calc();
-
-      double testcaseScore = 0;
-      // read outputs && count delta
-      for (final String name : outputCellNames) {
-        final ReferenceCell ocell = grid.getOutputCell(name);
-        if (ocell.getValue() == null) {
-          testcaseScore += 200; // TODO beter way of scoring
-        } else {
-          testcaseScore += scoreOutput(ocell, ocell.getValue(), getValue(name, valueNr));
-        }
-      }
-      switch (scoringType) {
-      case SCORING_HIGHEST_OF_TESTCASES:
-      case SCORING_HIGHEST_PERCENTAGE_OF_TESTCASES:
-        score = Math.max(testcaseScore, score);
-        break;
-      case SCORING_AVARAGE_PER_TESTCASE:
-      case SCORING_AVARAGE_PERCENTAGE_PER_TESTCASE:
-        score += testcaseScore;
-        break;
-      default:
-        throw new IllegalArgumentException("scoring type not supported:" + scoringType);
-      }
-
-      if (Calc.isNaNorInfinite(score)) {
-        return score;
-      }
-    }
-    score += grid.getGridExecutionErrors().size() * 5000;// TODO 5000???
-    switch (scoringType) {
-    case SCORING_HIGHEST_OF_TESTCASES:
-    case SCORING_HIGHEST_PERCENTAGE_OF_TESTCASES:
-      return score + scoreGrid(grid);
-    case SCORING_AVARAGE_PER_TESTCASE:
-    case SCORING_AVARAGE_PERCENTAGE_PER_TESTCASE:
-      return score / evalTillTestSetNr + scoreGrid(grid);
-    default:
-      throw new IllegalArgumentException("scoring type not supported:" + scoringType);
-    }
-  }
-
-  public abstract double scoreOutput(ReferenceCell outputCell, Object calculated, Object expected);
-
-  public abstract double scoreGrid(Grid g);
-
-  public double getAbsoluteNumberDifference(final Number calculated, final Number expected) {
-    if (calculated == null)
-      return Math.abs( expected.doubleValue());
-    return Math.abs(calculated.doubleValue() - expected.doubleValue());
-  }
-
-  public double getAbsoluteNumberDifference(final Number calculated, final NumberFeedback expected) {
-
-    double calced = calculated.doubleValue();
-    double expect = expected.value;
-    if (expected.directive == NumberFeedback.HIGHER && calced < expect) {
-      // System.out.println("HIGHER "+td.temperature+" calced "+temp);
-      return getAbsoluteNumberDifference(calced, expect);
-    } else if (expected.directive == NumberFeedback.LOWER && calced > expect) {
-      // System.out.println("LOWER "+td.temperature+" calced "+temp);
-      return getAbsoluteNumberDifference(calced, expect);
-    } else
-      // System.out.println(temp + " " + td);
-      return 0;
-  }
-
-  public double getAbsoluteNumberDifferencePercentage(final Number calculated, final Number expected) {
-    if (calculated == null)
-      return 100;
-    final double diff = Math.abs(calculated.doubleValue() - expected.doubleValue());
-    return (diff / expected.doubleValue()) * 100;
-  }
-
-  private Object getValue(final String name, final int i) {
+  public Object getValue(final String name, final int i) {
     return values.get(name).get(i);
   }
 
@@ -261,25 +138,6 @@ public abstract class TestSet implements Cloneable {
       e.printStackTrace();
       throw new IllegalStateException(e.getMessage());
     }
-  }
-
-  protected double getStringDifference(String calculated, String expected) {
-    // make sure there is a gradual score improvement
-    int penalty = 0;
-    if (calculated == null) {
-      penalty = expected.length() * letterWrongpenalty;
-    } else {
-      // mogelijkheden:
-      // 1 lettervergelijken op elke plek
-      // 2
-      penalty += Math.abs(calculated.length() - expected.length());
-      for (int i = 0; i < expected.length() && i < calculated.length(); i++) {
-        if (expected.charAt(i) != calculated.charAt(i)) {
-          penalty += letterWrongpenalty;
-        }
-      }
-    }
-    return penalty;
   }
 
   public void addCellValuesFromFile(String fileName) {
@@ -307,11 +165,10 @@ public abstract class TestSet implements Cloneable {
   }
 
   public void addCellValuesFromFile(String fileName, final String... columns) {
-
     // create list of valid names (skip SKIP_DATA_COLUMN)
     final ArrayList<String> validColumNames = new ArrayList<String>();
     for (String name : columns) {
-      if (!name.equals(SKIP_DATA_COLUMN)) {
+      if (!name.equals(SKIP_COLUMN)) {
         validColumNames.add(name);
       }
     }
@@ -332,7 +189,7 @@ public abstract class TestSet implements Cloneable {
           int validCount = 0;
           for (int i = 0; i < split.length; i++) {
             // copy only data which is valid
-            if (!columns[i].equals(SKIP_DATA_COLUMN)) {
+            if (!columns[i].equals(SKIP_COLUMN)) {
               ds[validCount] = Double.parseDouble(split[i]);
               validCount++;
             }
@@ -350,7 +207,7 @@ public abstract class TestSet implements Cloneable {
     return values;
   }
 
-  public int getNumValues() {
+  public int getNumberOfTestCases() {
     return numValues;
   }
 
@@ -358,21 +215,93 @@ public abstract class TestSet implements Cloneable {
     return setup;
   }
 
-  public int getEvalTillTestSetNr() {
-    return evalTillTestSetNr;
+  SimpleDateFormat mysqlDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+  private Map<String, DataTransformer> dataTransformers = new HashMap<String, DataTransformer>();
+
+  public void addCellValuesFromMySQLFile(String fileName, final String... columns) {
+    try {
+      // create list of valid names (skip SKIP_DATA_COLUMN)
+      final ArrayList<String> validColumNames = new ArrayList<String>();
+      for (String name : columns) {
+        if (!name.equals(SKIP_COLUMN)) {
+          validColumNames.add(name);
+        }
+      }
+      String[] validColumns = validColumNames.toArray(new String[0]);
+
+      String data = FileUtil.readFile(fileName);
+      String[] lines = data.split("\n");
+
+      for (final String line : lines) {
+        if (line.startsWith("|")) {
+          String lineToSplit = line.substring(1);
+          String[] parts = lineToSplit.split("\\|");
+          try {
+            Object[] ds = new Object[validColumns.length];
+            int validCount = 0;
+            for (int i = 0; i < columns.length; i++) {
+              String cellName = columns[i];
+              // copy only data which is valid
+              if (!cellName.equals(SKIP_COLUMN)) {
+                String cellValue = parts[i].trim();
+                DataTransformer dt = dataTransformers.get(cellName);
+                if (dt != null) {
+                  cellValue = dt.transform(cellValue);
+                }
+                // Debug.println(cellName + " > " + cellValue);
+                Class<? extends Object> type = setup.getInOrOutPutCellType(cellName);
+
+                if (type.equals(Double.class)) {
+                  ds[validCount] = Double.parseDouble(cellValue);
+                } else if (type.equals(String.class)) {
+                  ds[validCount] = cellValue;
+                } else if (type.equals(Integer.class)) {
+                  ds[validCount] = Integer.parseInt(cellValue);
+                } else if (type.equals(InetAddress.class)) {
+                  ds[validCount] = InetAddress.getByName(cellValue);
+                } else if (type.equals(Date.class)) {
+                  ds[validCount] = mysqlDateFormat.parse(cellValue);
+                } else if (type.equals(Boolean.class)) {
+                  ds[validCount] = Boolean.valueOf(cellValue);
+                } else {
+                  // try to instantiate (needs constructor with a String argument!!)
+                  Constructor<? extends Object> c = type.getDeclaredConstructor(String.class);
+                  ds[validCount] = c.newInstance(cellValue);
+                }
+                validCount++;
+              }
+            }
+            // add valid data with valid columnnames
+            addCellValues((Object[]) ds, validColumns);
+          } catch (ParseException e) {
+            Debug.println("Error parsing: " + line);// TODO fix error logging
+            throw e;
+          }
+        }
+      }
+    } catch (IOException e) {
+      Sneak.sneakyThrow(e);
+    } catch (ParseException e) {
+      Sneak.sneakyThrow(e);
+    } catch (SecurityException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (NoSuchMethodException e) {
+      Sneak.sneakyThrow(e);
+    } catch (InstantiationException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
-  /**
-   * default = SCORING_AVARAGE_PER_TESTCASE
-   * 
-   * @param scoringType
-   */
-  public void setScoringType(ScoringType scoringType) {
-    this.scoringType = scoringType;
+  public void addTransformer(String field, DataTransformer dataTransformer) {
+    dataTransformers.put(field, dataTransformer);
   }
-
-  public ScoringType getScoringType() {
-    return scoringType;
-  }
-
 }

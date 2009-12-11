@@ -16,67 +16,84 @@
 
 package nl.bluevoid.genpro;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
 import java.util.ArrayList;
 
 import nl.bluevoid.genpro.util.Calc;
 import nl.bluevoid.genpro.util.Debug;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
  */
 public class GenerationRunner extends Thread {
 
-  final Setup setup;
-  final TestSet testSet;
+  private final Setup setup;
+  //private final TestSet testSet;
 
   private double bestScore = Double.MAX_VALUE;
   Grid bestSolution = null;
   private Generation curGen;
   private long startTotal;
-  private long genCounter;
+  private boolean stopRunning = false;
 
   ArrayList<ResultListener> resultListeners = new ArrayList<ResultListener>();
+  private Generation newGen;
+  private long lastStatsTime=0;
+  private long statsInterval=10000;
+  private final TestSetSolutionEvaluator evaluator;
 
-  public GenerationRunner(Setup setup, TestSet testSet) {
+  public GenerationRunner(Setup setup, TestSetSolutionEvaluator evaluator ) {
     this.setup = setup;
-    this.testSet = testSet;
+    //this.testSet = testSet;
+    this.evaluator = evaluator;
+  }
+
+  public void stopRunning() {
+    stopRunning = true;
+    curGen.stopRunning();
+    newGen.stopRunning();
   }
 
   public void runGenerations() {
-    curGen = getCurGen();
     startTotal = System.currentTimeMillis();
+    curGen = getCurGen();
+
     // create generations and evaluate
-   
+
     final long maxGen = setup.getStopAtGeneration() == -1 ? Long.MAX_VALUE : setup.getStopAtGeneration();
-    Generation newGen = null;
-    for (genCounter = 0; genCounter < maxGen; genCounter++) {
+
+    while (curGen.getNr() < maxGen) {
       newGen = curGen.next();
       evaluateGeneration(newGen);
       if (setup.getStopAtScore() != -1 && newGen.getBestSolution().getScore() < setup.getStopAtScore())
         break;
       curGen = newGen;
+      if (stopRunning)
+        break;
     }
-    Grid winner = newGen.getBestSolution();
   }
 
   public void evaluateGeneration(Generation newGen) {
-    newGen.evaluate(testSet);
+    newGen.evaluate(evaluator);
 
     // process result of this generation
     if (newGen.getBestSolution().getScore() < bestScore) {
       bestSolution = newGen.getBestSolution();
       bestScore = bestSolution.getScore();
-      notifyResultListeners();
+      notifyResultListenersOnNewBest();
     }
 
-    //print statistics 
-    if (genCounter % 100 == 1) {
-      final long end = System.currentTimeMillis();
+    final int genNr = newGen.getNr();
+    final long avgMillisPerGeneration = (System.currentTimeMillis() - startTotal) / genNr;
 
+    notifyResultListenersOnStats((int) genNr, avgMillisPerGeneration);
+    final long timeNow=System.currentTimeMillis();
+    // print statistics
+    if ((timeNow-lastStatsTime)>statsInterval && genNr!=1) {
+      lastStatsTime=timeNow;
+      
       curGen.printChooseResult();
-      Debug.println("gen:" + newGen.getNr() + " time per gen:" + (end - startTotal) / genCounter
+      Debug.println("gen:" + genNr + " time per gen:" + avgMillisPerGeneration
           + " millis  avg. score of top 80%:" + newGen.getAverageScore(0.8));
       // request garbagecollect
       System.gc();
@@ -87,22 +104,33 @@ public class GenerationRunner extends Thread {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
-      MemoryMXBean mxb = ManagementFactory.getMemoryMXBean();
-      long bytes = mxb.getHeapMemoryUsage().getUsed();
-      long maxBytes=mxb.getHeapMemoryUsage().getMax();
+      // not android compliant:
+      // MemoryMXBean mxb = ManagementFactory.getMemoryMXBean();
+      // long bytes = mxb.getHeapMemoryUsage().getUsed();
+      // long maxBytes=mxb.getHeapMemoryUsage().getMax();
+      long maxBytes = Runtime.getRuntime().totalMemory();
+      long bytes = maxBytes - Runtime.getRuntime().freeMemory();
       float mbMax = Calc.truncDecimals(maxBytes / (1024f * 1024), 1);
-      
+
       float mb = Calc.truncDecimals(bytes / (1024f * 1024), 1);
-      Debug.println("Memory used: " + mb + " Mb"+ " max:"+ mbMax+" Mb");
+      Debug.println("Memory used: " + mb + " Mb" + " max:" + mbMax + " Mb");
     }
   }
 
-  private Generation createStartGeneration() {
+  protected Generation createStartGeneration() {
     Generation gen = new Generation(setup);
     for (int i = 0; i < setup.getGenerationSize(); i++) {
       Grid grid = setup.generateSolution();
+
       gen.addSolution(grid);
+      if(setup.isGridHistoryTrackingOn()){
+        grid.addToHistory("Created as random solution in generation "+gen.getNr());
+      }
+      if (i % 10 == 0) {
+        notifyResultListenersOnStartUp(i);
+      }
     }
+    notifyResultListenersOnStartUp(setup.getGenerationSize());
     return gen;
   }
 
@@ -118,9 +146,21 @@ public class GenerationRunner extends Thread {
     resultListeners.add(r);
   }
 
-  private void notifyResultListeners() {
+  private void notifyResultListenersOnNewBest() {
     for (ResultListener listener : resultListeners) {
       listener.newBestResult(bestSolution);
+    }
+  }
+
+  private void notifyResultListenersOnStats(final int gen, final long millisAvarage) {
+    for (ResultListener listener : resultListeners) {
+      listener.newStats(gen, millisAvarage);
+    }
+  }
+
+  private void notifyResultListenersOnStartUp(int individualsCreated) {
+    for (ResultListener listener : resultListeners) {
+      listener.startUpProgress(individualsCreated);
     }
   }
 }

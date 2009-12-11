@@ -16,8 +16,11 @@
 
 package nl.bluevoid.genpro.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
+
 /**
  * 
  * @author Rob van der Veer
@@ -40,4 +43,13 @@ public class CollectionsUtil {
     }
     return value;
   }
+
+  public static ArrayList<String> toStringEntries(Map<?, ?> map) {
+    ArrayList<String> str = new ArrayList<String>();
+    for (Entry<?, ?> e : map.entrySet()) {
+      str.add(e.getKey().toString() + " : " + e.getValue().toString());
+    }
+    return str;
+  }
+
 }

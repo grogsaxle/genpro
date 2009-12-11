@@ -19,10 +19,9 @@ package nl.bluevoid.genpro.util.test;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import junit.framework.TestCase;
 import nl.bluevoid.genpro.util.ReflectUtil;
 import nl.bluevoid.genpro.util.Stopwatch;
-
-import junit.framework.TestCase;
 /**
  * @author Rob van der Veer
  * @since 1.0

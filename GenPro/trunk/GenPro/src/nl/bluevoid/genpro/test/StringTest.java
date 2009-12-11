@@ -19,21 +19,24 @@ package nl.bluevoid.genpro.test;
 import junit.framework.TestCase;
 import nl.bluevoid.genpro.GenerationRunner;
 import nl.bluevoid.genpro.Grid;
+import nl.bluevoid.genpro.GridSolutionEvaluator;
 import nl.bluevoid.genpro.Setup;
 import nl.bluevoid.genpro.TestSet;
+import nl.bluevoid.genpro.TestSetSolutionEvaluator;
 import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.BooleanOperations;
 import nl.bluevoid.genpro.operations.NumberOperations;
 import nl.bluevoid.genpro.util.Debug;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
  */
 public class StringTest extends TestCase {
 
-  private TestSet testSet;
+  private TestSetSolutionEvaluator testSet;
   private Setup setup;
 
   // @Override
@@ -52,8 +55,21 @@ public class StringTest extends TestCase {
     setup.setCallCells(4, "c", new Class[] { String.class });// , Integer.class, Boolean.class });
     // setup.addIfCell(1);
 
-    testSet = new TestSet(setup, new String[] { "in", "out" }) {
-      public double scoreOutput(ReferenceCell cell, Object calculated, Object expected) {
+    testSet = new GridSolutionEvaluator() {
+      @Override
+      public TestSet createTestSet() {
+        TestSet testSet = new TestSet(setup, new String[] { "in", "out" });
+        testSet.addCellValues("Annapurna", "napur");
+        testSet.addCellValues("Kailash", "ilash");
+        testSet.addCellValues("Everest", "erest");
+        testSet.addCellValues("Mont Blanc", "nt bl");
+        testSet.addCellValues("Stone Henge", "one h");
+        testSet.addCellValues("Tour Eifel", "ur ei");
+        return testSet;
+      }
+
+      @Override
+      public double scoreOutput(ReferenceCell outputCell, Object calculated, Object expected) {
         return getStringDifference((String) calculated, (String) expected);
       }
 
@@ -61,15 +77,12 @@ public class StringTest extends TestCase {
       public double scoreGrid(Grid g) {
         return 0;
       }
-    };
 
-    testSet.addCellValues( "Annapurna", "napur" );
-    testSet.addCellValues( "Kailash", "ilash" );
-    testSet.addCellValues("Everest", "erest" );
-    testSet.addCellValues("Mont Blanc", "nt bl" );
-    testSet.addCellValues( "Stone Henge", "one h" );
-    testSet.addCellValues( "Tour Eifel", "ur ei" );
-    // testSet.addCellValues(new String[] { "Mont blanc", "nt bl" });
+      @Override
+      public double scoreGridException(Throwable t) {
+        return 300;
+      }
+    };
   }
 
   public void runGenerations() {
