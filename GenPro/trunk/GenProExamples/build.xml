@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="GenPro examples" default=""	basedir=".">
+	<import file="../genpro/build.xml"/>
+	
 	<target name="Jar">
-		<jar destfile="genpro-examples-0.8.jar" >
+		<jar destfile="genpro-examples-${version}.jar" >
 			<fileset dir="./bin/" id="resources">
 				<include name="**/**.class" />
 				<exclude name="**/test/**.*"/>

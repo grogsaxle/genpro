@@ -17,20 +17,23 @@
 package nl.bluevoid.genpro.example.eggweight;
 
 import nl.bluevoid.genpro.Grid;
+import nl.bluevoid.genpro.GridSolutionEvaluator;
 import nl.bluevoid.genpro.ScoringType;
 import nl.bluevoid.genpro.Setup;
 import nl.bluevoid.genpro.TestSet;
-import nl.bluevoid.genpro.Trainer;
+import nl.bluevoid.genpro.TestSetSolutionEvaluator;
 import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.NumberOperations;
+import nl.bluevoid.genpro.view.TrainerVisual;
+
 /**
  * 
  * @author Rob van der Veer
  * @since 1.0
  */
-public class EggWeightProblemWidth extends Trainer{//Visual {
+public class EggWeightProblemWidth extends TrainerVisual {
 
   public static void main(String[] args) throws Exception {
     EggWeightProblemWidth ep = new EggWeightProblemWidth();
@@ -39,20 +42,20 @@ public class EggWeightProblemWidth extends Trainer{//Visual {
 
   @Override
   public Setup createSetup() {
-    Setup setup = new Setup(this);
+    Setup setup = new Setup();
 
     // create all cells
     setup.addInputCell("width", Double.class);
     setup.addOutputCell("weight", Double.class);
 
-    setup.setCallCells(7, "c",  Double.class );
+    setup.setCallCells(7, "c", Double.class);
 
     ConstantCell cCell1 = new ConstantCell("const1", Double.class, -100, 100);
     ConstantCell cCell2 = new ConstantCell("const2", Double.class, -100, 100);
     ConstantCell cCell3 = new ConstantCell("const3", Double.class, -100, 100);
-    setup.setConstantCells( cCell1, cCell2, cCell3 );
-    setup.setLibraryCells( NumberOperations.NUM_OPS, //NumberOperations.MATH_CLASS,
-        GonioOperations.GONIO_OPS, new LibraryCell(Egg.class) );
+    setup.setConstantCells(cCell1, cCell2, cCell3);
+    setup.setLibraryCells(NumberOperations.NUM_OPS, // NumberOperations.MATH_CLASS,
+        GonioOperations.GONIO_OPS, new LibraryCell(Egg.class));
 
     setup.setGenerationSize(2000);
     setup.setMutatePercentage(90);
@@ -60,24 +63,36 @@ public class EggWeightProblemWidth extends Trainer{//Visual {
     setup.setMaxIndividualsWithSameScore(30);
     setup.setMinimumScoreForSaving(10);
     setup.setEvaluateMultiThreaded(false);
-    //setup.setSolutionInterface(EggWeightSolution.class);
+    // setup.setSolutionInterface(EggWeightSolution.class);
     return setup;
   }
 
   @Override
-  public TestSet createTestSet() {
-    TestSet testSet = new TestSet(setup, "width", "weight" ) {
+  public TestSetSolutionEvaluator createEvaluator() {
+    GridSolutionEvaluator gse = new GridSolutionEvaluator() {
       public double scoreOutput(ReferenceCell cell, Object calculated, Object expected) {
-        return getAbsoluteNumberDifferencePercentage((Number)calculated, (Number)expected);
+        return getAbsoluteNumberDifferencePercentage((Number) calculated, (Number) expected);
+      }
+
+      @Override
+      public double scoreGridException(Throwable t) {
+        return 0;
       }
 
       @Override
       public double scoreGrid(Grid g) {
-        return (g.getNrOfUsedCallCells()-2)*0.1; // each cell may cost a 0.1 gram deviation
+        return (g.getNrOfUsedCallCells() - 2) * 0.1; // each cell may cost a 0.1 gram deviation
+      }
+
+      @Override
+      public TestSet createTestSet() {
+        TestSet testSet = new TestSet(setup, "width", "weight");
+        testSet.addCellValuesFromFile("eggData.txt", TestSet.SKIP_COLUMN, "width", "weight");
+        return testSet;
       }
     };
-    testSet.setScoringType(ScoringType.SCORING_HIGHEST_PERCENTAGE_OF_TESTCASES);
-    testSet.addCellValuesFromFile("eggData.txt", TestSet.SKIP_DATA_COLUMN, "width", "weight");
-    return testSet;
+    
+    gse.setScoringType(ScoringType.SCORING_HIGHEST_PERCENTAGE_OF_TESTCASES);
+    return gse;
   }
 }

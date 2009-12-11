@@ -17,14 +17,17 @@
 package nl.bluevoid.genpro.example.eggweight;
 
 import nl.bluevoid.genpro.Grid;
+import nl.bluevoid.genpro.GridSolutionEvaluator;
 import nl.bluevoid.genpro.ScoringType;
 import nl.bluevoid.genpro.Setup;
 import nl.bluevoid.genpro.TestSet;
+import nl.bluevoid.genpro.TestSetSolutionEvaluator;
 import nl.bluevoid.genpro.cell.ConstantCell;
 import nl.bluevoid.genpro.cell.LibraryCell;
 import nl.bluevoid.genpro.cell.ReferenceCell;
 import nl.bluevoid.genpro.operations.NumberOperations;
 import nl.bluevoid.genpro.view.TrainerVisual;
+
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -45,14 +48,14 @@ public class EggWeightProblem extends TrainerVisual {
     setup.addInputCell("width", Double.class);
     setup.addOutputCell("weight", Double.class);
 
-    setup.setCallCells(5, "c",  Double.class );
+    setup.setCallCells(5, "c", Double.class);
 
     ConstantCell cCell1 = new ConstantCell("const1", Double.class, -100, 100);
     ConstantCell cCell2 = new ConstantCell("const2", Double.class, -100, 100);
     ConstantCell cCell3 = new ConstantCell("const3", Double.class, -100, 100);
-    setup.setConstantCells( cCell1, cCell2, cCell3 );
-    setup.setLibraryCells( NumberOperations.NUM_OPS, //NumberOperations.MATH_CLASS,
-        GonioOperations.GONIO_OPS, new LibraryCell(Egg.class) );
+    setup.setConstantCells(cCell1, cCell2, cCell3);
+    setup.setLibraryCells(NumberOperations.NUM_OPS, // NumberOperations.MATH_CLASS,
+        GonioOperations.GONIO_OPS, new LibraryCell(Egg.class));
 
     setup.setGenerationSize(2000);
     setup.setMutatePercentage(30);
@@ -62,19 +65,33 @@ public class EggWeightProblem extends TrainerVisual {
   }
 
   @Override
-  public TestSet createTestSet() {
-    TestSet testSet = new TestSet(setup,  "height", "width", "weight" ) {
+  public TestSetSolutionEvaluator createEvaluator() {
+    GridSolutionEvaluator gse = new GridSolutionEvaluator() {
       public double scoreOutput(ReferenceCell cell, Object calculated, Object expected) {
-        return getAbsoluteNumberDifferencePercentage((Number)calculated, (Number)expected);
+        if (calculated == null)
+          return 300;
+        return getAbsoluteNumberDifferencePercentage((Number) calculated, (Number) expected);
       }
 
       @Override
       public double scoreGrid(Grid g) {
-        return 0;//g.getNrOfUsedCallCells()*0.1; // each cell may cost a 0.1 gram deviation
+        return 0;// g.getNrOfUsedCallCells()*0.1; // each cell may cost a 0.1 gram deviation
+      }
+
+      @Override
+      public double scoreGridException(Throwable t) {
+        return 0;
+      }
+
+      @Override
+      public TestSet createTestSet() {
+        TestSet testSet = new TestSet(setup, "height", "width", "weight");
+        testSet.addCellValuesFromFile("eggData.txt");
+        return testSet;
       }
     };
-    testSet.setScoringType(ScoringType.SCORING_AVARAGE_PERCENTAGE_PER_TESTCASE);
-    testSet.addCellValuesFromFile("eggData.txt");
-    return testSet;
+    
+    gse.setScoringType(ScoringType.SCORING_AVARAGE_PERCENTAGE_PER_TESTCASE);
+    return gse;
   }
 }
