@@ -58,11 +58,11 @@ public class JungGraph {
   //private ArrayList<CellInterface> all = new ArrayList<CellInterface>();
 
   // private static int count = 0;
-  private final boolean usedOnly;
+  private final boolean showJunkDna;
   private CellInterface[] legendCells;
 
-  public JungGraph(Grid grid, boolean usedOnly) {
-    this.usedOnly = usedOnly;
+  public JungGraph(Grid grid, boolean showJunkDna) {
+    this.showJunkDna = showJunkDna;
     // count++;
     // System.out.println("creating JungGraph " + count);
     this.grid = grid;
@@ -145,7 +145,7 @@ public class JungGraph {
   private void addCells(CellInterface[] inCells, boolean forceAdd) {
     for (int i = 0; i < inCells.length; i++) {
       Debug.checkNotNull(inCells[i], "inCells:" + i);
-      if (forceAdd || !usedOnly || inCells[i].isUsedForOutput())
+      if (forceAdd || showJunkDna || inCells[i].isUsedForOutput())
         g2.addVertex(inCells[i]);
     }
   }
@@ -174,6 +174,7 @@ public class JungGraph {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public JPanel getVisualComponent() {
     // SimpleGraphDraw sgv = new SimpleGraphDraw(); // We create our graph in here
 

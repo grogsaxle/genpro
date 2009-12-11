@@ -205,13 +205,7 @@ public class SwingUtil {
     return frame;
   }
 
-  /**
-   * Thread.sleep throws interruptedException<< brings an interrupted Thread back in normal state, this method
-   * checks the state before and brings the Thread back to prior state.
-   * 
-   * @param ms
-   */
-
+ 
   //	
   // /**
   // * @param titel

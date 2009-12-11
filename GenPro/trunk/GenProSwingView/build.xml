@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="GenPro SwingView" default=""	basedir=".">
+	<import file="../genpro/build.xml"/>
 	<target name="Jar">
-		<jar destfile="genpro-swingview-0.8.jar" >
+		<jar destfile="genpro-swingview-${version}.jar" >
 			<fileset dir="./bin/" id="resources">
 				<include name="**/**.class" />
 				<exclude name="**/test/**.*"/>
