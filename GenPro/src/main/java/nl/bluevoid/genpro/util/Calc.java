@@ -18,8 +18,6 @@ package nl.bluevoid.genpro.util;
 
 import java.util.Random;
 
-import junit.framework.Assert;
-
 /**
  * @author Rob van der Veer
  * @since 1.0
@@ -121,7 +119,8 @@ public final class Calc {
   }
 
   public static void main(String[] args) {
-    Assert.assertEquals(truncDecimals(3.141595, 2), 3.14, 0.0001);
+/* TODO move main
+ *  Assert.assertEquals(truncDecimals(3.141595, 2), 3.14, 0.0001);
     Assert.assertEquals(truncDecimals(3.141595, 3), 3.141, 0.0001);
     Assert.assertEquals(truncDecimals(3.141595, 0), 3, 0.0001);
     Assert.assertEquals(truncDecimals(3.141595, 1), 3.1, 0.0001);
@@ -133,7 +132,7 @@ public final class Calc {
 
     test(10);
     test(-10);
-
+  */
   }
 
   private static void test(int r) {

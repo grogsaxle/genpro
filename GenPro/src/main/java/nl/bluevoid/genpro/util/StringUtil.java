@@ -308,22 +308,11 @@ public class StringUtil {
     return b.toString();
   }
 
+  /** UNUSED SHUCK OUT
   public static String replaceAccentChars(String text) {
-    text = text.replaceAll("[ÀÁÂÄÃ]", "A");
-    text = text.replaceAll("[àáâãäå]", "a");
-    text = text.replaceAll("[ÌÍÎÏ]", "I");
-    text = text.replaceAll("[ìíîï]", "i");
-    text = text.replaceAll("[ÒÓÔÕÖ]", "O");
-    text = text.replaceAll("[òóôõö]", "o");
-    text = text.replaceAll("[ÙÚÛÜ]", "U");
-    text = text.replaceAll("[ùúûü]", "u");
-    text = text.replaceAll("[ÈÉÊË]", "E");
-    text = text.replaceAll("[èéêë]", "e");
-    text = text.replaceAll("[Ñ]", "N");
-    text = text.replaceAll("[ñ]", "n");
-    text = text.replaceAll("[ç]", "c");
     return text;
   }
+  **/
 
   public static String getHexString(byte[] b) {
     String result = "";
