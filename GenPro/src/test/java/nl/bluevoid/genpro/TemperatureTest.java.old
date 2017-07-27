@@ -111,11 +111,6 @@ public class TemperatureTest extends TestCase {
     };
   }
 
-  public static void main(String[] args) throws Exception {
-    TemperatureTest t = new TemperatureTest();
-    t.setUp();
-    t.runGenerations();
-  }
 
   public void testCrossing() {
     // generate solution
@@ -200,11 +195,12 @@ public class TemperatureTest extends TestCase {
       // changed from invalid to valid, test succeded
       System.out.println("(s1Invalid && !s2Invalid) || (!s1Invalid && s2Invalid)");
     } else {// both are valid: we expect a change in result ~ TODO wrong assumption!!!
+      System.out.println("score2 DO WE HAVE 0.000001 " + score2 + " " + score); 
       Assert.assertTrue(Math.abs(score2 - score) > 0.000001);
     }
   }
 
-  public void runGenerations() throws IllegalAccessException, InvocationTargetException, IOException {
+  public void testRunGenerations() throws IllegalAccessException, InvocationTargetException, IOException {
     GenerationRunner gr = new GenerationRunner(setup, evaluator);
     gr.runGenerations();
   }
@@ -213,19 +209,27 @@ public class TemperatureTest extends TestCase {
     System.out.println("testMultiThread");
     // Test to see if all in a generation is calculated correct when doing multithreaded calculation
     GenerationRunner gr = new GenerationRunner(setup, evaluator);
-
+System.out.println("here 1");
     // create and evaluated multithreaded
     Generation gen = gr.getCurGen();
+System.out.println("here 2");
     // evaluate singlethreaded
     checkScore(gen);
+System.out.println("here 3");
 
     Generation gen2 = gen.next();
+System.out.println("here 4");
     gr.evaluateGeneration(gen2);
+System.out.println("here 5");
     checkScore(gen2);
+System.out.println("here 6");
 
     Generation gen3 = gen2.next();
+System.out.println("here 7");
     gr.evaluateGeneration(gen3);
+System.out.println("here 8");
     checkScore(gen3);
+System.out.println("here 9");
   }
 
   public void testConvertToJavaSpeed() throws IllegalAccessException, InvocationTargetException, IOException {
@@ -262,6 +266,7 @@ public class TemperatureTest extends TestCase {
         checkConsts(gen, g);
         checkCallCells(gen, g);
       }
+      System.out.println("DO WE HAVE 0.001 " + g.getScore() + " " + score);
       assertEquals(g.getScore(), score, 0.001);
       i++;
     }

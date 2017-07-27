@@ -85,19 +85,13 @@ public class StringTest extends TestCase {
     };
   }
 
-  public void runGenerations() {
+  public void testRunGenerations() {
     try {
       GenerationRunner gr = new GenerationRunner(setup, testSet);
       gr.runGenerations();
     } catch (Throwable e) {
       Debug.printFullStackTrace(e);
     }
-  }
-
-  public static void main(String[] args) throws Exception {
-    StringTest t = new StringTest();
-    t.setUp();
-    t.runGenerations();
   }
 
 }
